@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Facilitador — Simulación S2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  :root {
+    --navy:#1E2761; --navyL:#2B3A8A; --navyD:#141B4D;
+    --gold:#C9A84C; --lgold:#F5EDD4;
+    --offwhite:#F4F6FC; --gray:#64748B; --lgray:#E2E8F0;
+    --dark:#1E293B; --red:#991B1B; --green:#065F46;
+    --amber:#92400E; --amberL:#FEF3C7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--navyD);color:white;min-height:100vh;}
+
+  .header{background:var(--navy);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--gold);}
+  .header h1{font-size:17px;font-weight:800;}
+  .header p{font-size:10px;color:#8BA8C4;margin-top:2px;}
+  .live-badge{background:rgba(6,95,70,0.3);border:2px solid #34D399;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#34D399;display:flex;align-items:center;gap:6px;}
+  .live-dot{width:7px;height:7px;background:#34D399;border-radius:50%;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .main{max-width:1100px;margin:0 auto;padding:20px 18px 60px;}
+
+  /* STAT GRID */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+  @media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr;}}
+  .stat-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;text-align:center;}
+  .stat-card .sl{font-size:10px;font-weight:700;color:#8BA8C4;text-transform:uppercase;letter-spacing:.5px;}
+  .stat-card .sv{font-size:34px;font-weight:800;margin-top:3px;}
+  .stat-card .ss{font-size:10px;color:#8BA8C4;margin-top:3px;}
+
+  /* PANELS */
+  .panel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+  .panel-hdr{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;}
+  .panel-hdr h3{font-size:13px;font-weight:700;}
+  .panel-hdr span{font-size:11px;color:#8BA8C4;}
+  .panel-body{padding:16px;}
+
+  /* MOMENTO TABS */
+  .momento-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .m-tab{padding:7px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#CBD5E1;transition:all .2s;}
+  .m-tab:hover{border-color:var(--gold);color:var(--gold);}
+  .m-tab.active{background:var(--gold);border-color:var(--gold);color:var(--navyD);}
+
+  /* GROUP COMPARISON TABLE */
+  .comp-table{width:100%;border-collapse:collapse;}
+  .comp-table th{background:rgba(255,255,255,0.08);padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:#8BA8C4;text-transform:uppercase;letter-spacing:.4px;}
+  .comp-table td{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;}
+  .comp-table tr:hover td{background:rgba(255,255,255,0.04);}
+
+  .decision-pill{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;}
+  .dp-correct{background:rgba(6,95,70,0.3);color:#6EE7B7;border:1px solid rgba(6,95,70,0.5);}
+  .dp-incorrect{background:rgba(153,27,27,0.3);color:#FCA5A5;border:1px solid rgba(153,27,27,0.5);}
+  .dp-pending{background:rgba(100,116,139,0.2);color:#94A3B8;border:1px solid rgba(100,116,139,0.3);}
+
+  /* GROUP SCORE CARDS */
+  .group-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  @media(max-width:700px){.group-scores{grid-template-columns:1fr 1fr;}}
+  .gs-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px;text-align:center;}
+  .gs-card .gs-group{font-size:11px;font-weight:700;color:#8BA8C4;text-transform:uppercase;letter-spacing:.5px;}
+  .gs-card .gs-score{font-size:32px;font-weight:800;margin:4px 0;}
+  .gs-card .gs-pips{display:flex;gap:4px;justify-content:center;margin-top:6px;}
+  .gs-pip{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);}
+  .gs-pip.ok{background:#34D399;border-color:#34D399;}
+  .gs-pip.ko{background:#F87171;border-color:#F87171;}
+  .gs-pip.pending{background:rgba(201,168,76,0.3);border-color:var(--gold);}
+
+  /* MOMENTO DETAIL */
+  .momento-detail{background:rgba(255,255,255,0.04);border-radius:8px;padding:13px;margin-bottom:12px;}
+  .md-escena{font-size:12px;color:#CBD5E1;line-height:1.6;margin-bottom:10px;}
+  .md-opciones{display:flex;flex-direction:column;gap:5px;}
+  .md-opcion{padding:8px 12px;border-radius:6px;font-size:11.5px;color:#CBD5E1;border:1px solid rgba(255,255,255,0.08);}
+  .md-opcion.correct-ans{background:rgba(6,95,70,0.2);border-color:rgba(52,211,153,0.4);color:#6EE7B7;}
+
+  /* DIVERGENCE BANNER */
+  .diverg-banner{background:rgba(146,64,14,0.25);border:1px solid rgba(201,168,76,0.4);border-radius:8px;padding:10px 14px;font-size:12px;color:#FCD34D;margin-bottom:12px;display:none;}
+  .diverg-banner.show{display:block;}
+
+  /* CONTROLS */
+  .controls{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+  .ctrl-badge{background:rgba(201,168,76,0.15);border:1px solid var(--gold);border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;color:var(--gold);}
+  .btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+  .btn-export{background:rgba(201,168,76,0.2);color:var(--gold);border:1px solid var(--gold);}
+  .btn-export:hover{background:rgba(201,168,76,0.35);}
+  .btn-danger{background:rgba(153,27,27,0.3);color:#FCA5A5;border:1px solid rgba(153,27,27,0.5);}
+  .btn-danger:hover{background:rgba(153,27,27,0.5);}
+  .last-upd{font-size:10px;color:#4A6A8A;margin-left:auto;}
+
+  /* PLENARIA QUESTIONS */
+  .plen-q{background:rgba(255,255,255,0.05);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 13px;font-size:12px;color:#CBD5E1;margin-bottom:7px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🎓 Panel Facilitador — Simulación Sesión 2</h1>
+    <p>Asobancaria · Conflicto de Interés en Sesión de Junta · Resultados en tiempo real</p>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>EN VIVO</div>
+</div>
+
+<div class="main">
+
+  <div class="controls">
+    <div class="ctrl-badge" id="connStatus">⏳ Conectando...</div>
+    <button class="btn btn-export" onclick="exportCSV()">⬇ Exportar resultados</button>
+    <button class="btn btn-danger" onclick="confirmClear()">🗑 Limpiar sesión</button>
+    <span class="last-upd" id="lastUpd"></span>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="sl">Grupos activos</div>
+      <div class="sv" id="statGroups" style="color:var(--gold)">0</div>
+      <div class="ss">de 6 posibles</div>
+    </div>
+    <div class="stat-card">
+      <div class="sl">Promedio general</div>
+      <div class="sv" id="statAvg" style="color:#34D399">—</div>
+      <div class="ss">decisiones correctas / 5</div>
+    </div>
+    <div class="stat-card">
+      <div class="sl">Momento más difícil</div>
+      <div class="sv" id="statHard" style="color:#FCA5A5;font-size:20px;padding-top:8px">—</div>
+      <div class="ss" id="statHardPct"></div>
+    </div>
+    <div class="stat-card">
+      <div class="sl">Momento más fácil</div>
+      <div class="sv" id="statEasy" style="color:#6EE7B7;font-size:20px;padding-top:8px">—</div>
+      <div class="ss" id="statEasyPct"></div>
+    </div>
+  </div>
+
+  <!-- GROUP SCORES -->
+  <div class="panel">
+    <div class="panel-hdr">
+      <h3>🏆 Marcador por Grupos</h3>
+      <span id="groupsCount">0 grupos</span>
+    </div>
+    <div class="panel-body">
+      <div class="group-scores" id="groupScores">
+        <div style="grid-column:1/-1;text-align:center;padding:20px;color:#4A6A8A">Esperando que los grupos inicien la simulación...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISIONES POR MOMENTO -->
+  <div class="panel">
+    <div class="panel-hdr">
+      <h3>⚡ Decisiones por Momento Crítico</h3>
+      <span>Haga clic en un momento para ver el detalle</span>
+    </div>
+    <div class="panel-body">
+      <div class="momento-tabs" id="momentoTabs">
+        <div class="m-tab active" onclick="showMomentoDetail(1)">Momento 1</div>
+        <div class="m-tab" onclick="showMomentoDetail(2)">Momento 2</div>
+        <div class="m-tab" onclick="showMomentoDetail(3)">Momento 3</div>
+        <div class="m-tab" onclick="showMomentoDetail(4)">Momento 4</div>
+        <div class="m-tab" onclick="showMomentoDetail(5)">Momento 5</div>
+      </div>
+      <div class="diverg-banner" id="divergBanner">⚠️ Los grupos tomaron decisiones diferentes en este momento — excelente punto de discusión para la plenaria.</div>
+      <div id="momentoDetailContent"></div>
+      <div style="overflow-x:auto">
+        <table class="comp-table" id="compTable">
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="compBody">
+            <tr><td colspan="7" style="text-align:center;padding:20px;color:#4A6A8A">Esperando decisiones...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLENARIA -->
+  <div class="panel">
+    <div class="panel-hdr">
+      <h3>🎤 Preguntas para la Plenaria</h3>
+      <span>Use los datos del panel para anclar la discusión</span>
+    </div>
+    <div class="panel-body">
+      <div class="plen-q">¿En cuál de los 5 momentos divergieron más los grupos? ¿Qué explica esa diferencia?</div>
+      <div class="plen-q">El momento con menor acierto es el más importante del protocolo. ¿Por qué bajo presión tendemos a equivocarnos precisamente ahí?</div>
+      <div class="plen-q">¿Cuál de los cuatro roles (Presidente, Independiente, VP en conflicto, Secretaria) tuvo más dificultad para actuar según el protocolo? ¿Por qué?</div>
+      <div class="plen-q">¿Qué cambio concreto en Asobancaria haría más fácil aplicar este protocolo en una sesión real de Junta?</div>
+      <div class="plen-q">¿Cómo cambiaría su respuesta en el Momento 5 (revelación en informe de GC) si hubieran cometido algún error en los momentos anteriores?</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC9KSd8-eV17_fH5zjD3nR3QpAA0D1QpFU",
+  authDomain: "gc-asobancaria.firebaseapp.com",
+  databaseURL: "https://gc-asobancaria-default-rtdb.firebaseio.com",
+  projectId: "gc-asobancaria",
+  storageBucket: "gc-asobancaria.firebasestorage.app",
+  messagingSenderId: "36253900055",
+  appId: "1:36253900055:web:d0313cf1ef1db5b333eb52"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref('.info/connected').on('value', s => {
+  const el = document.getElementById('connStatus');
+  if (s.val()) { el.textContent = '🟢 Conectado — actualizando en tiempo real'; el.style.color='#34D399'; el.style.borderColor='#34D399'; }
+  else          { el.textContent = '🔴 Sin conexión'; el.style.color='#FCA5A5'; el.style.borderColor='#FCA5A5'; }
+});
+
+const MOMENTOS_INFO = [
+  { id:1, titulo:"Antes de la sesión",        correcto_idx:1, opciones:["Abrir sesión normalmente","Hablar con el VP antes (✓)","Aplazar la sesión","Retirar el punto sin explicación"] },
+  { id:2, titulo:"Declaración del conflicto", correcto_idx:2, opciones:["VP presenta pero no vota","VP responde preguntas puntuales","VP se retira completamente (✓)","La Junta vota si puede participar"] },
+  { id:3, titulo:"La votación",               correcto_idx:0, opciones:["Votación válida 3-2 sobre 5 (✓)","No válida, requiere mayoría sobre 6","Nueva sesión con todos","Voto de calidad del Presidente"] },
+  { id:4, titulo:"El acta",                   correcto_idx:1, opciones:["Solo registrar aprobación por mayoría","Registrar todo el proceso (✓)","Registrar 'ausencia por motivos personales'","Consultar abogados primero"] },
+  { id:5, titulo:"Informe de GC",             correcto_idx:2, opciones:["No revelar","Revelar genéricamente","Revelar con detalle material (✓)","Pedir consentimiento al VP"] },
+];
+
+const GROUPS = ['G1','G2','G3','G4','G5','G6'];
+let allData = {};
+let selectedMomento = 1;
+
+db.ref('simulacion_s2').on('value', snap => {
+  allData = snap.val() || {};
+  render();
+  document.getElementById('lastUpd').textContent = 'Última actualización: ' + new Date().toLocaleTimeString('es-CO');
+});
+
+function render() {
+  const groups = Object.keys(allData);
+  const n = groups.length;
+
+  // STAT CARDS
+  document.getElementById('statGroups').textContent = n;
+  document.getElementById('groupsCount').textContent = n + ' grupo' + (n !== 1 ? 's' : '');
+
+  if (n === 0) {
+    document.getElementById('statAvg').textContent = '—';
+    document.getElementById('statHard').textContent = '—';
+    document.getElementById('statEasy').textContent = '—';
+    document.getElementById('groupScores').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#4A6A8A">Esperando que los grupos inicien...</div>';
+    document.getElementById('compBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#4A6A8A">Esperando decisiones...</td></tr>';
+    return;
+  }
+
+  // Calculate averages
+  const groupScores = {};
+  const momentoCorrects = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+  const momentoCounts  = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+
+  groups.forEach(g => {
+    const d = allData[g];
+    let correct = 0;
+    const decisions = {};
+    for (let m = 1; m <= 5; m++) {
+      const md = d.momentos && d.momentos[`m${m}`];
+      if (md !== undefined) {
+        decisions[m] = md;
+        momentoCounts[m]++;
+        if (md.correcto) { momentoCorrects[m]++; correct++; }
+      } else if (d.answers) {
+        const ans = d.answers[m - 1];
+        if (ans) {
+          decisions[m] = { correcto: ans.correcto };
+          momentoCounts[m]++;
+          if (ans.correcto) { momentoCorrects[m]++; correct++; }
+        }
+      }
+    }
+    groupScores[g] = { correct, decisions, total: d.total || correct };
+  });
+
+  // Global avg
+  const totalCorrect = Object.values(groupScores).reduce((s, g) => s + g.correct, 0);
+  const avgCorrect = (totalCorrect / n).toFixed(1);
+  document.getElementById('statAvg').textContent = avgCorrect;
+
+  // Hardest / easiest momento
+  let hardIdx = 1, easyIdx = 1, hardPct = 100, easyPct = 0;
+  for (let m = 1; m <= 5; m++) {
+    if (momentoCounts[m] > 0) {
+      const pct = Math.round(momentoCorrects[m] / momentoCounts[m] * 100);
+      if (pct < hardPct) { hardPct = pct; hardIdx = m; }
+      if (pct > easyPct) { easyPct = pct; easyIdx = m; }
+    }
+  }
+  document.getElementById('statHard').textContent = `Momento ${hardIdx}`;
+  document.getElementById('statHardPct').textContent = `${hardPct}% de acierto`;
+  document.getElementById('statEasy').textContent = `Momento ${easyIdx}`;
+  document.getElementById('statEasyPct').textContent = `${easyPct}% de acierto`;
+
+  // GROUP SCORE CARDS
+  const gsHtml = GROUPS.map(g => {
+    const d = groupScores[g];
+    if (!d) return `<div class="gs-card" style="opacity:.35">
+      <div class="gs-group">${g}</div>
+      <div class="gs-score" style="color:#4A6A8A;font-size:14px;padding:8px 0">Sin iniciar</div>
+    </div>`;
+    const color = d.correct >= 4 ? '#6EE7B7' : d.correct >= 3 ? '#FCD34D' : '#F87171';
+    const pips = [1,2,3,4,5].map(m => {
+      const dec = d.decisions[m];
+      if (!dec) return `<div class="gs-pip pending"></div>`;
+      return `<div class="gs-pip ${dec.correcto ? 'ok' : 'ko'}"></div>`;
+    }).join('');
+    return `<div class="gs-card">
+      <div class="gs-group">${g}</div>
+      <div class="gs-score" style="color:${color}">${d.correct}/5</div>
+      <div class="gs-pips">${pips}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('groupScores').innerHTML = gsHtml;
+
+  // COMPARISON TABLE
+  const rows = GROUPS.map(g => {
+    const d = groupScores[g];
+    if (!d) return `<tr><td style="color:#4A6A8A">${g}</td>${[1,2,3,4,5].map(() => `<td><span class="decision-pill dp-pending">—</span></td>`).join('')}<td style="color:#4A6A8A">—</td></tr>`;
+    const cells = [1,2,3,4,5].map(m => {
+      const dec = d.decisions[m];
+      if (!dec) return `<td><span class="decision-pill dp-pending">—</span></td>`;
+      return `<td><span class="decision-pill ${dec.correcto ? 'dp-correct' : 'dp-incorrect'}">${dec.correcto ? '✓' : '✗'}</span></td>`;
+    }).join('');
+    const color = d.correct >= 4 ? '#6EE7B7' : d.correct >= 3 ? '#FCD34D' : '#F87171';
+    return `<tr><td style="font-weight:700">${g}</td>${cells}<td style="font-weight:800;color:${color}">${d.correct}/5</td></tr>`;
+  }).join('');
+  document.getElementById('compBody').innerHTML = rows;
+
+  // Update momento detail
+  showMomentoDetail(selectedMomento, groupScores, momentoCorrects, momentoCounts);
+}
+
+function showMomentoDetail(mId, gs, mc, mcnt) {
+  selectedMomento = mId;
+  document.querySelectorAll('.m-tab').forEach((t, i) => t.classList.toggle('active', i === mId - 1));
+
+  // Load current data if not passed
+  if (!gs) {
+    const groups = Object.keys(allData);
+    gs = {};
+    mc = { 1:0,2:0,3:0,4:0,5:0 };
+    mcnt = { 1:0,2:0,3:0,4:0,5:0 };
+    groups.forEach(g => {
+      const d = allData[g];
+      let correct = 0;
+      const decisions = {};
+      for (let m = 1; m <= 5; m++) {
+        const md = d.momentos && d.momentos[`m${m}`];
+        if (md) { decisions[m] = md; mcnt[m]++; if (md.correcto) { mc[m]++; correct++; } }
+        else if (d.answers && d.answers[m-1]) { decisions[m] = { correcto: d.answers[m-1].correcto }; mcnt[m]++; if (d.answers[m-1].correcto) { mc[m]++; correct++; } }
+      }
+      gs[g] = { correct, decisions };
+    });
+  }
+
+  const mi = MOMENTOS_INFO[mId - 1];
+  const pct = mcnt[mId] > 0 ? Math.round(mc[mId] / mcnt[mId] * 100) : null;
+
+  // Check divergence
+  const answeredGroups = Object.values(gs).filter(g => g.decisions[mId]);
+  const correctCount = answeredGroups.filter(g => g.decisions[mId]?.correcto).length;
+  const hasDiverg = answeredGroups.length > 1 && correctCount > 0 && correctCount < answeredGroups.length;
+  document.getElementById('divergBanner').classList.toggle('show', hasDiverg);
+
+  const opcHtml = mi.opciones.map((o, i) => {
+    const isCorrect = i === mi.correcto_idx;
+    return `<div class="md-opcion ${isCorrect ? 'correct-ans' : ''}">${isCorrect ? '✓ ' : ''}${o}</div>`;
+  }).join('');
+
+  const pctHtml = pct !== null
+    ? `<div style="margin-top:10px;font-size:12px;color:#8BA8C4">Acierto del grupo: <strong style="color:${pct>=60?'#6EE7B7':pct>=40?'#FCD34D':'#F87171'}">${pct}% (${mc[mId]}/${mcnt[mId]} grupos acertaron)</strong></div>`
+    : `<div style="margin-top:10px;font-size:11px;color:#4A6A8A">Sin respuestas aún en este momento</div>`;
+
+  document.getElementById('momentoDetailContent').innerHTML = `
+    <div class="momento-detail">
+      <div style="font-size:13px;font-weight:700;color:white;margin-bottom:8px">Momento ${mId}: ${mi.titulo}</div>
+      <div class="md-opciones">${opcHtml}</div>
+      ${pctHtml}
+    </div>`;
+}
+
+function exportCSV() {
+  const groups = Object.keys(allData);
+  if (!groups.length) { alert('No hay datos para exportar.'); return; }
+  const rows = [['Grupo','M1','M2','M3','M4','M5','Total Correctas','%']];
+  groups.forEach(g => {
+    const d = allData[g];
+    let correct = 0;
+    const cells = [1,2,3,4,5].map(m => {
+      const md = (d.momentos && d.momentos[`m${m}`]) || (d.answers && d.answers[m-1] ? {correcto:d.answers[m-1].correcto} : null);
+      if (!md) return '—';
+      if (md.correcto) correct++;
+      return md.correcto ? 'Correcto' : 'Incorrecto';
+    });
+    rows.push([g, ...cells, correct, Math.round(correct/5*100)+'%']);
+  });
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'}));
+  a.download = `GC_Simulacion_S2_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function confirmClear() {
+  if (confirm('¿Borrar TODOS los resultados de la simulación? Esta acción no se puede deshacer.')) {
+    db.ref('simulacion_s2').remove().then(() => alert('Datos eliminados.'));
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulación Junta — Asobancaria S2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  :root {
+    --navy:#1E2761; --navyL:#2B3A8A; --navyD:#141B4D;
+    --gold:#C9A84C; --lgold:#F5EDD4; --gold2:#A37008;
+    --offwhite:#F4F6FC; --gray:#64748B; --lgray:#E2E8F0;
+    --dark:#1E293B; --red:#991B1B; --redL:#FEE2E2;
+    --green:#065F46; --greenL:#D1FAE5;
+    --blue:#1D4ED8; --blueL:#DBEAFE;
+    --amber:#92400E; --amberL:#FEF3C7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--offwhite);color:var(--dark);min-height:100vh;}
+
+  /* HEADER */
+  .header{background:var(--navy);color:white;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--gold);position:sticky;top:0;z-index:100;}
+  .header-left h1{font-size:15px;font-weight:700;}
+  .header-left p{font-size:10px;color:#8BA8C4;margin-top:2px;}
+  .header-right{display:flex;align-items:center;gap:10px;}
+  .group-badge{background:rgba(201,168,76,0.2);border:2px solid var(--gold);border-radius:8px;padding:6px 14px;font-size:13px;font-weight:800;color:var(--gold);}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#34D399;}
+  .sync-dot.off{background:#FCA5A5;}
+
+  /* PROGRESS */
+  .prog-bar-wrap{background:#E2E8F0;height:6px;}
+  .prog-bar{height:6px;background:linear-gradient(90deg,var(--navy),var(--gold));transition:width .6s ease;}
+
+  /* STEP INDICATORS */
+  .steps-row{display:flex;gap:0;margin-bottom:0;overflow:hidden;}
+  .step-chip{flex:1;padding:8px 4px;text-align:center;font-size:10px;font-weight:600;background:white;border-bottom:3px solid var(--lgray);color:var(--gray);transition:all .3s;cursor:default;}
+  .step-chip.active{border-bottom-color:var(--gold);color:var(--navy);font-weight:700;}
+  .step-chip.done{border-bottom-color:var(--green);color:var(--green);}
+  .step-chip .sc-num{display:block;font-size:14px;font-weight:800;margin-bottom:1px;}
+
+  .main{max-width:820px;margin:0 auto;padding:20px 16px 80px;}
+
+  /* SECTION HEADER */
+  .sec-header{background:var(--navy);border-radius:12px 12px 0 0;padding:16px 20px;color:white;display:flex;align-items:center;gap:12px;}
+  .sec-icon{width:40px;height:40px;background:rgba(201,168,76,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .sec-header h2{font-size:16px;font-weight:700;}
+  .sec-header p{font-size:11px;color:#8BA8C4;margin-top:1px;}
+  .sec-body{background:white;border:1px solid var(--lgray);border-radius:0 0 12px 12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+
+  .section{display:none;}
+  .section.active{display:block;animation:fadeIn .3s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* GROUP SELECTOR */
+  .group-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;}
+  @media(max-width:500px){.group-selector{grid-template-columns:1fr 1fr;}}
+  .group-btn{padding:18px 8px;border:2px solid var(--lgray);border-radius:10px;background:white;cursor:pointer;text-align:center;transition:all .2s;font-family:'Inter',sans-serif;}
+  .group-btn:hover{border-color:var(--gold);background:var(--lgold);}
+  .group-btn.selected{border-color:var(--navy);background:var(--navy);color:white;}
+  .group-btn .gb-num{font-size:28px;font-weight:800;display:block;margin-bottom:3px;}
+  .group-btn .gb-label{font-size:11px;font-weight:600;}
+
+  /* ROLES */
+  .roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+  @media(max-width:500px){.roles-grid{grid-template-columns:1fr;}}
+  .role-card{border-radius:10px;padding:13px;border:1px solid var(--lgray);}
+  .role-card .rc-title{font-size:12px;font-weight:700;margin-bottom:5px;}
+  .role-card .rc-desc{font-size:11.5px;color:var(--gray);line-height:1.5;}
+  .role-card .rc-key{font-size:10.5px;font-weight:600;margin-top:7px;padding:4px 8px;border-radius:6px;display:inline-block;}
+
+  /* CASE BOX */
+  .case-box{background:#EFF3F8;border-left:4px solid var(--navy);border-radius:0 10px 10px 0;padding:16px;margin:14px 0;font-size:13px;line-height:1.7;}
+  .case-box strong{color:var(--navy);}
+  .case-box .case-amount{display:inline-block;background:var(--navy);color:var(--gold);font-weight:800;font-size:15px;padding:4px 12px;border-radius:6px;margin:8px 0;}
+
+  /* MOMENTO */
+  .momento-header{background:var(--navyD);border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+  .momento-num{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--navyD);flex-shrink:0;}
+  .momento-header h3{font-size:15px;font-weight:700;color:white;}
+  .momento-header p{font-size:11px;color:#8BA8C4;margin-top:2px;}
+
+  .escena-box{background:var(--amberL);border:1px solid var(--gold);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.6;}
+  .escena-box strong{color:var(--amber);}
+
+  /* OPTIONS */
+  .options-label{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+  .options-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .option-btn{padding:13px 16px;border:2px solid var(--lgray);border-radius:10px;background:white;cursor:pointer;font-size:13px;font-family:'Inter',sans-serif;text-align:left;transition:all .2s;color:var(--dark);line-height:1.5;position:relative;}
+  .option-btn:hover{border-color:var(--navyL);background:#F0F3FF;}
+  .option-btn.selected{border-color:var(--navy);background:var(--navy);color:white;}
+  .option-btn.correct{border-color:var(--green)!important;background:var(--greenL)!important;color:var(--green)!important;}
+  .option-btn.incorrect{border-color:var(--red)!important;background:var(--redL)!important;color:var(--red)!important;}
+  .option-btn .opt-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;display:block;opacity:.7;}
+  .option-btn.selected .opt-tag{opacity:.8;}
+  .option-letter{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;border:2px solid currentColor;font-size:11px;font-weight:700;margin-right:8px;flex-shrink:0;float:left;margin-top:2px;}
+
+  /* FEEDBACK */
+  .feedback-box{border-radius:10px;padding:14px 16px;margin:12px 0;font-size:13px;line-height:1.6;display:none;}
+  .feedback-box.show{display:block;animation:fadeIn .4s ease;}
+  .feedback-box.correct{background:var(--greenL);border:2px solid #34D399;color:var(--green);}
+  .feedback-box.incorrect{background:var(--redL);border:2px solid #FCA5A5;color:var(--red);}
+  .feedback-box h4{font-size:13px;font-weight:700;margin-bottom:5px;}
+  .feedback-box .norma{font-size:11px;font-weight:600;margin-top:8px;padding:5px 10px;border-radius:6px;display:inline-block;}
+  .feedback-box.correct .norma{background:rgba(6,95,70,0.15);}
+  .feedback-box.incorrect .norma{background:rgba(153,27,27,0.15);}
+
+  /* SCORE BAR */
+  .score-row{display:flex;align-items:center;gap:10px;background:var(--offwhite);border-radius:8px;padding:10px 14px;margin-bottom:16px;}
+  .score-label{font-size:11px;font-weight:600;color:var(--gray);flex:1;}
+  .score-pips{display:flex;gap:5px;}
+  .pip{width:20px;height:20px;border-radius:50%;border:2px solid var(--lgray);background:white;transition:all .4s;}
+  .pip.correct{background:var(--green);border-color:var(--green);}
+  .pip.incorrect{background:var(--red);border-color:var(--red);}
+  .pip.current{border-color:var(--gold);background:var(--lgold);}
+
+  /* FINAL RESULTS */
+  .final-score{text-align:center;padding:24px 16px;background:var(--navy);border-radius:12px;color:white;margin-bottom:16px;}
+  .final-score .fs-num{font-size:56px;font-weight:800;color:var(--gold);}
+  .final-score .fs-label{font-size:14px;color:#8BA8C4;margin-top:4px;}
+  .final-score .fs-msg{font-size:13px;color:var(--lgold);margin-top:10px;font-style:italic;line-height:1.5;}
+
+  .answer-review{margin-bottom:16px;}
+  .review-item{border-radius:8px;padding:12px 14px;margin-bottom:8px;border-left:4px solid transparent;}
+  .review-item.ok{background:var(--greenL);border-left-color:var(--green);}
+  .review-item.ko{background:var(--redL);border-left-color:var(--red);}
+  .review-item .ri-momento{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:3px;}
+  .review-item .ri-decision{font-size:12px;font-weight:600;margin-bottom:3px;}
+  .review-item .ri-correcto{font-size:11.5px;color:var(--gray);}
+
+  /* TIP */
+  .tip{background:var(--amberL);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:11px 14px;font-size:12px;color:var(--amber);margin-bottom:14px;font-weight:500;}
+
+  .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+  .btn-primary{background:var(--navy);color:white;}
+  .btn-primary:hover{background:var(--navyD);}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-gold{background:var(--gold);color:white;}
+  .btn-gold:hover{background:var(--gold2);}
+  .btn-secondary{background:white;color:var(--navy);border:2px solid var(--navy);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Simulación: Sesión de Junta — Conflicto de Interés</h1>
+    <p>Asobancaria · Sesión 2 · Universidad EAFIT · Luz María Rivas, Ph.D.</p>
+  </div>
+  <div class="header-right">
+    <div class="group-badge" id="groupBadge">Sin grupo</div>
+    <div class="sync-dot off" id="syncDot" title="Estado de conexión"></div>
+  </div>
+</div>
+<div class="prog-bar-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+
+<!-- STEP CHIPS -->
+<div class="steps-row">
+  <div class="step-chip active" id="chip-0"><span class="sc-num">👥</span>Grupo</div>
+  <div class="step-chip" id="chip-1"><span class="sc-num">1</span>Escena</div>
+  <div class="step-chip" id="chip-2"><span class="sc-num">2</span>Escena</div>
+  <div class="step-chip" id="chip-3"><span class="sc-num">3</span>Escena</div>
+  <div class="step-chip" id="chip-4"><span class="sc-num">4</span>Escena</div>
+  <div class="step-chip" id="chip-5"><span class="sc-num">5</span>Escena</div>
+  <div class="step-chip" id="chip-6"><span class="sc-num">🏆</span>Resultado</div>
+</div>
+
+<div class="main">
+
+  <!-- ===== PASO 0: SELECCIÓN DE GRUPO ===== -->
+  <div class="section active" id="sec-0">
+    <div class="sec-header">
+      <div class="sec-icon">👥</div>
+      <div>
+        <h2>Seleccione su Grupo</h2>
+        <p>Un dispositivo por grupo · El líder del grupo registra las decisiones colectivas</p>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="tip">💡 Deliberen en grupo antes de seleccionar cada opción. Solo el líder del grupo necesita operar la herramienta — los demás participan en la discusión.</div>
+
+      <div class="group-selector" id="groupSelector">
+        <div class="group-btn" onclick="selectGroup('G1')"><span class="gb-num">G1</span><span class="gb-label">Grupo 1</span></div>
+        <div class="group-btn" onclick="selectGroup('G2')"><span class="gb-num">G2</span><span class="gb-label">Grupo 2</span></div>
+        <div class="group-btn" onclick="selectGroup('G3')"><span class="gb-num">G3</span><span class="gb-label">Grupo 3</span></div>
+        <div class="group-btn" onclick="selectGroup('G4')"><span class="gb-num">G4</span><span class="gb-label">Grupo 4</span></div>
+        <div class="group-btn" onclick="selectGroup('G5')"><span class="gb-num">G5</span><span class="gb-label">Grupo 5</span></div>
+        <div class="group-btn" onclick="selectGroup('G6')"><span class="gb-num">G6</span><span class="gb-label">Grupo 6</span></div>
+      </div>
+
+      <div style="background:var(--offwhite);border-radius:10px;padding:16px;margin-top:4px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">🎭 Roles del grupo para la simulación</div>
+        <div class="roles-grid">
+          <div class="role-card" style="background:#EFF3F8;border-color:#B0BFEF;">
+            <div class="rc-title" style="color:var(--navy);">👤 Presidente de la Junta</div>
+            <div class="rc-desc">Modera la sesión. Garantiza que el protocolo de conflicto se siga correctamente. Tiene la última palabra sobre el procedimiento.</div>
+            <span class="rc-key" style="background:#E8EEFF;color:var(--navy);">Rol: MODERADOR</span>
+          </div>
+          <div class="role-card" style="background:#EFF3F8;border-color:#B0BFEF;">
+            <div class="rc-title" style="color:var(--navyL);">👤 Miembro Independiente</div>
+            <div class="rc-desc">Posición escéptica. Exige que el protocolo se aplique rigurosamente. Puede oponerse a decisiones que comprometan la independencia.</div>
+            <span class="rc-key" style="background:#E8EEFF;color:var(--navyL);">Rol: FISCAL</span>
+          </div>
+          <div class="role-card" style="background:var(--amberL);border-color:var(--gold);">
+            <div class="rc-title" style="color:var(--amber);">👤 VP de Finanzas (en conflicto)</div>
+            <div class="rc-desc">Tiene participación accionaria del 8% en la firma consultora. Debe decidir cómo manejar el conflicto en cada momento crítico.</div>
+            <span class="rc-key" style="background:rgba(146,64,14,0.15);color:var(--amber);">Rol: EN CONFLICTO</span>
+          </div>
+          <div class="role-card" style="background:var(--greenL);border-color:#6EE7B7;">
+            <div class="rc-title" style="color:var(--green);">👤 Secretaria de la Junta</div>
+            <div class="rc-desc">Asesora en protocolo y cumplimiento. Registra las declaraciones y decisiones. Advierte cuando se incumple el procedimiento.</div>
+            <span class="rc-key" style="background:rgba(6,95,70,0.15);color:var(--green);">Rol: CUSTODIO</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-gold" id="startBtn" onclick="startGame()" disabled>Iniciar Simulación →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOMENTO TEMPLATE (se genera por JS) -->
+  <div class="section" id="sec-momento">
+    <div class="sec-header" id="momento-header-ui">
+      <div class="sec-icon" id="momento-icon">⚡</div>
+      <div>
+        <h2 id="momento-title">Momento</h2>
+        <p id="momento-subtitle">Deliberen y seleccionen la decisión del grupo</p>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="score-row">
+        <span class="score-label">Progreso del grupo:</span>
+        <div class="score-pips" id="scorePips"></div>
+      </div>
+      <div class="escena-box" id="escena-text"></div>
+      <div class="options-label">¿Qué decide el grupo?</div>
+      <div class="options-grid" id="options-container"></div>
+      <div class="feedback-box" id="feedbackBox">
+        <h4 id="feedback-title"></h4>
+        <p id="feedback-text"></p>
+        <div class="norma" id="feedback-norma"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="nextBtn" onclick="nextMomento()" disabled>Siguiente momento →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RESULTADO FINAL ===== -->
+  <div class="section" id="sec-final">
+    <div class="sec-header" style="background:linear-gradient(135deg,var(--navyD),var(--navyL))">
+      <div class="sec-icon">🏆</div>
+      <div>
+        <h2>Resultado de la Simulación</h2>
+        <p id="final-group-label">Resultados del grupo</p>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="final-score">
+        <div class="fs-num" id="finalNum">0/5</div>
+        <div class="fs-label">decisiones correctas según el protocolo del Código País</div>
+        <div class="fs-msg" id="finalMsg"></div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">📋 Revisión de decisiones</div>
+      <div class="answer-review" id="answerReview"></div>
+      <div style="background:var(--offwhite);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;">🎯 Para la plenaria — reflexionen sobre:</div>
+        <div style="font-size:12px;color:var(--dark);line-height:1.8;">
+          ¿En cuál de los 5 momentos la decisión correcta fue más difícil de tomar bajo presión real?<br>
+          ¿Qué rol del grupo generó más tensión al deliberar? ¿Por qué?<br>
+          ¿Qué cambiaría en Asobancaria para que este protocolo funcione en la práctica?
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="resetGame()">↺ Reiniciar simulación</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+/* ─── FIREBASE ─── */
+const firebaseConfig = {
+  apiKey: "AIzaSyC9KSd8-eV17_fH5zjD3nR3QpAA0D1QpFU",
+  authDomain: "gc-asobancaria.firebaseapp.com",
+  databaseURL: "https://gc-asobancaria-default-rtdb.firebaseio.com",
+  projectId: "gc-asobancaria",
+  storageBucket: "gc-asobancaria.firebasestorage.app",
+  messagingSenderId: "36253900055",
+  appId: "1:36253900055:web:d0313cf1ef1db5b333eb52"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+db.ref('.info/connected').on('value', s => {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot ' + (s.val() ? '' : 'off');
+});
+
+/* ─── CASO Y MOMENTOS ─── */
+const CASO = {
+  titulo: "Renovación del contrato con Strategos Consulting",
+  monto: "$2.400 millones",
+  contexto: `La Junta de Asobancaria debe decidir en esta sesión si renueva por 3 años el contrato de consultoría estratégica con <strong>Strategos Consulting</strong>, firma que lleva 5 años acompañando a la organización. El equipo técnico recomienda la renovación por calidad del servicio y competitividad de costos.<br><br>Minutos antes de la sesión, la Secretaria descubre que el <strong>Vicepresidente de Finanzas tiene una participación accionaria del 8%</strong> en Strategos Consulting, adquirida hace 8 meses. El VP no lo ha declarado.`
+};
+
+const MOMENTOS = [
+  {
+    id: 1,
+    titulo: "Antes de iniciar la sesión",
+    subtitulo: "La Secretaria informa al Presidente sobre el conflicto del VP",
+    icon: "📋",
+    escena: `Son las 9:58 am. La Secretaria acaba de descubrir el vínculo accionario del VP de Finanzas con Strategos. La sesión comienza en 2 minutos. El Presidente de la Junta debe decidir qué hacer con esta información <strong>antes de abrir la sesión</strong>.`,
+    opciones: [
+      { letra:"A", texto:"Abrir la sesión normalmente y dejar que el VP declare el conflicto espontáneamente durante la presentación del tema.", correcto:false },
+      { letra:"B", texto:"Hablar privadamente con el VP antes de abrir la sesión, informarle del hallazgo y pedirle que declare formalmente el conflicto al inicio.", correcto:true },
+      { letra:"C", texto:"Aplazar la sesión completa hasta que los abogados estudien el caso y emitan un concepto formal.", correcto:false },
+      { letra:"D", texto:"Retirar el punto de la agenda sin explicación y tramitarlo en otra sesión sin el VP.", correcto:false },
+    ],
+    correcto_idx: 1,
+    feedback_ok: "Correcto. El protocolo exige que el conflicto sea declarado formalmente, de preferencia antes de que el tema se debata. El Presidente debe facilitar esa declaración, no eliminar el punto ni esperar a ver qué pasa.",
+    feedback_ko: "El protocolo del Código País establece que el miembro en conflicto debe declararlo al inicio del tema o, mejor aún, antes de que se abra la discusión. El Presidente tiene la responsabilidad de asegurar que ese proceso ocurra con transparencia.",
+    norma: "Código País — Módulo II, principio de gestión de conflictos de interés"
+  },
+  {
+    id: 2,
+    titulo: "Declaración del conflicto",
+    subtitulo: "El VP declara su participación. ¿Qué alcance tiene esa declaración?",
+    icon: "🗣️",
+    escena: `Al inicio del punto, el VP de Finanzas declara: <em>"Tengo una participación del 8% en Strategos Consulting. Sin embargo, soy quien mejor conoce el trabajo de esta firma y creo que mi opinión técnica es valiosa para la decisión. Propongo que participe en la presentación pero me abstenga de votar."</em><br><br>El Presidente debe decidir si acepta esta propuesta.`,
+    opciones: [
+      { letra:"A", texto:"Aceptar: el VP puede presentar el informe técnico pero no puede votar. Su conocimiento es necesario para la deliberación.", correcto:false },
+      { letra:"B", texto:"Aceptar parcialmente: el VP puede responder preguntas técnicas puntuales si la Junta lo solicita, pero no puede liderar la presentación ni participar en la deliberación.", correcto:false },
+      { letra:"C", texto:"Rechazar: el VP debe retirarse de la sala durante toda la discusión y votación. Otro directivo presenta el informe técnico.", correcto:true },
+      { letra:"D", texto:"Someter a votación del pleno si el VP puede o no participar en la presentación.", correcto:false },
+    ],
+    correcto_idx: 2,
+    feedback_ok: "Correcto. El protocolo establece que el miembro en conflicto debe abstenerse de participar en la deliberación Y debe retirarse de la sala. Permitirle presentar el caso — incluso sin votar — sesga la deliberación porque los demás miembros reciben la información filtrada por quien tiene interés.",
+    feedback_ko: "Aunque intuitivamente parece razonable aprovechar el conocimiento técnico del VP, el protocolo de conflictos de interés es claro: la abstención aplica a todo el proceso deliberativo, no solo a la votación. Quien tiene interés no puede presentar ni argumentar el caso.",
+    norma: "Código País — La abstención cubre la deliberación completa, no solo la votación"
+  },
+  {
+    id: 3,
+    titulo: "Durante la votación",
+    subtitulo: "El VP se retiró. Quedan 5 miembros. ¿Cómo se vota?",
+    icon: "🗳️",
+    escena: `El VP se ha retirado. Quedan 5 miembros de Junta en sala. Tras la deliberación, 3 votan a favor de renovar el contrato y 2 en contra. El Miembro Independiente plantea: <em>"¿Es válida esta votación con solo 5 miembros? ¿El quórum se calcula sobre 6 o sobre 5?"</em>`,
+    opciones: [
+      { letra:"A", texto:"La votación es válida. El quórum y la mayoría se calculan sobre los miembros presentes con derecho a voto (5). El resultado 3-2 es válido.", correcto:true },
+      { letra:"B", texto:"La votación no es válida porque se requiere la mayoría sobre el total de miembros de la Junta (6). Con 3/6 no hay mayoría absoluta.", correcto:false },
+      { letra:"C", texto:"Se debe convocar una nueva sesión con todos los miembros presentes, incluyendo al VP, para garantizar el quórum completo.", correcto:false },
+      { letra:"D", texto:"El Presidente tiene voto de calidad para desempatar, así que el resultado debe ser unánime o el punto se aplaza.", correcto:false },
+    ],
+    correcto_idx: 0,
+    feedback_ok: "Correcto. Cuando un miembro se retira por conflicto de interés, el quórum y la mayoría se calculan sobre los miembros con derecho a votar en ese punto específico. La decisión 3-2 sobre 5 miembros presentes y habilitados es completamente válida.",
+    feedback_ko: "Este es un error frecuente. El quórum no se ve afectado por la ausencia del miembro en conflicto — se recalcula sobre quienes tienen derecho a participar en ese punto. Obligar al VP a participar para completar quórum anularía todo el propósito del protocolo.",
+    norma: "Código País — Quórum deliberatorio recalculado cuando un miembro se inhibe"
+  },
+  {
+    id: 4,
+    titulo: "El acta de la sesión",
+    subtitulo: "La Secretaria debe redactar el acta. ¿Qué debe quedar registrado?",
+    icon: "📝",
+    escena: `La decisión fue tomada: se renueva el contrato. La Secretaria debe redactar el acta. El Presidente le indica: <em>"Para no crear problemas, registremos solo que el punto fue aprobado por mayoría. No mencionemos el conflicto de interés — ya quedó resuelto y no queremos que esto genere ruido con los afiliados."</em>`,
+    opciones: [
+      { letra:"A", texto:"Aceptar la instrucción del Presidente: si el conflicto ya fue gestionado correctamente, no es necesario documentarlo en el acta.", correcto:false },
+      { letra:"B", texto:"Registrar en el acta: la declaración formal del conflicto, el retiro del VP, que el quórum se recalculó, y el resultado de la votación con las posiciones de cada miembro.", correcto:true },
+      { letra:"C", texto:"Registrar solo que el VP se ausentó por motivos personales, sin mencionar el conflicto para proteger su privacidad.", correcto:false },
+      { letra:"D", texto:"Elevar una consulta a los asesores legales antes de redactar el acta para determinar qué nivel de detalle es requerido.", correcto:false },
+    ],
+    correcto_idx: 1,
+    feedback_ok: "Correcto. El acta es el documento legal que protege a todos los miembros y a la organización. Un conflicto de interés gestionado correctamente debe quedar íntegramente documentado — precisamente porque fue bien manejado. Omitirlo crea riesgo legal posterior.",
+    feedback_ko: "La instrucción del Presidente, aunque bien intencionada, es incorrecta y riesgosa. El acta debe reflejar fielmente lo ocurrido. Si la SFC o un afiliado impugna la decisión, la ausencia del registro del conflicto convertirá un buen manejo en una apariencia de ocultamiento.",
+    norma: "Código País — Módulo III: Las actas deben reflejar fidedignamente los conflictos gestionados"
+  },
+  {
+    id: 5,
+    titulo: "El informe de Gobierno Corporativo",
+    subtitulo: "¿Se revela este conflicto en el informe anual de GC a la SFC?",
+    icon: "📤",
+    escena: `Tres meses después, Asobancaria prepara su informe anual de Gobierno Corporativo para la SFC. El equipo de comunicaciones pregunta si deben incluir el conflicto de interés del VP en el informe, dado que <em>"ya fue resuelto"</em> y <em>"podría generar preguntas incómodas de los afiliados"</em>.`,
+    opciones: [
+      { letra:"A", texto:"No revelar: el conflicto fue gestionado correctamente en la sesión y ya no es relevante para el informe. Incluirlo solo generará ruido innecesario.", correcto:false },
+      { letra:"B", texto:"Revelar de forma genérica: mencionar que 'durante el año se presentaron y gestionaron conflictos de interés según el protocolo' sin detalles específicos.", correcto:false },
+      { letra:"C", texto:"Revelar con detalle material: describir la naturaleza del conflicto, el miembro involucrado, cómo se gestionó y la decisión adoptada.", correcto:true },
+      { letra:"D", texto:"Consultar primero con el VP si consiente en que se revele su nombre antes de incluirlo en el informe.", correcto:false },
+    ],
+    correcto_idx: 2,
+    feedback_ok: "Correcto. El principio de transparencia del Código País exige que los conflictos de interés materiales sean revelados en el informe de GC, con suficiente detalle para que los grupos de interés puedan evaluar si fueron gestionados apropiadamente. La revelación completa protege — no daña.",
+    feedback_ko: "La transparencia es precisamente más valiosa cuando el conflicto fue bien gestionado. Revelar el conflicto y su manejo correcto fortalece la confianza. Ocultarlo o diluirlo — incluso habiendo actuado bien — genera el riesgo de que aparezca después como una omisión deliberada.",
+    norma: "Código País — Módulo III: Revelación de conflictos de interés materiales en informes de GC"
+  }
+];
+
+/* ─── STATE ─── */
+let currentGroup = null;
+let currentMomento = 0;
+let answers = [];       // { momento, opcion, correcto }
+let answered = false;
+
+/* ─── GROUP SELECTION ─── */
+function selectGroup(g) {
+  currentGroup = g;
+  document.querySelectorAll('.group-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.group-btn[onclick="selectGroup('${g}')"]`).classList.add('selected');
+  document.getElementById('groupBadge').textContent = g;
+  document.getElementById('startBtn').disabled = false;
+}
+
+function startGame() {
+  if (!currentGroup) return;
+  currentMomento = 0;
+  answers = [];
+  showMomento(0);
+  setProgress(1);
+}
+
+/* ─── MOMENTO RENDERING ─── */
+function showMomento(idx) {
+  const m = MOMENTOS[idx];
+  answered = false;
+
+  // Update step chips
+  for (let i = 0; i <= 6; i++) {
+    const chip = document.getElementById(`chip-${i}`);
+    if (!chip) continue;
+    chip.classList.remove('active', 'done');
+    if (i === idx + 1) chip.classList.add('active');
+    else if (i > 0 && i < idx + 1) chip.classList.add('done');
+  }
+
+  document.getElementById('momento-icon').textContent = m.icon;
+  document.getElementById('momento-title').textContent = `Momento ${m.id}: ${m.titulo}`;
+  document.getElementById('momento-subtitle').textContent = m.subtitulo;
+  document.getElementById('escena-text').innerHTML = m.escena;
+
+  // Score pips
+  const pips = document.getElementById('scorePips');
+  pips.innerHTML = MOMENTOS.map((_, i) => {
+    let cls = 'pip';
+    if (i < answers.length) cls += answers[i].correcto ? ' correct' : ' incorrect';
+    else if (i === idx) cls += ' current';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  // Options
+  const oc = document.getElementById('options-container');
+  oc.innerHTML = m.opciones.map((o, i) => `
+    <button class="option-btn" id="opt-${i}" onclick="selectOption(${i})">
+      <span class="opt-tag">Opción ${o.letra}</span>
+      ${o.texto}
+    </button>`).join('');
+
+  // Reset feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box';
+  fb.style.display = 'none';
+  document.getElementById('nextBtn').disabled = true;
+  document.getElementById('nextBtn').textContent = idx === MOMENTOS.length - 1 ? 'Ver resultado final →' : 'Siguiente momento →';
+
+  // Show section
+  showSection('sec-momento');
+}
+
+function selectOption(optIdx) {
+  if (answered) return;
+  answered = true;
+
+  const m = MOMENTOS[currentMomento];
+  const isCorrect = optIdx === m.correcto_idx;
+
+  // Style buttons
+  m.opciones.forEach((_, i) => {
+    const btn = document.getElementById(`opt-${i}`);
+    if (i === optIdx) btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+    if (i === m.correcto_idx && !isCorrect) btn.classList.add('correct');
+    btn.style.pointerEvents = 'none';
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'} show`;
+  fb.style.display = 'block';
+  document.getElementById('feedback-title').textContent = isCorrect ? '✅ ¡Decisión correcta!' : '❌ Decisión incorrecta según el protocolo';
+  document.getElementById('feedback-text').textContent = isCorrect ? m.feedback_ok : m.feedback_ko;
+  document.getElementById('feedback-norma').textContent = '📖 ' + m.norma;
+
+  // Save answer
+  answers.push({ momento: m.id, titulo: m.titulo, opcionIdx: optIdx, opcionTexto: m.opciones[optIdx].texto, correcto: isCorrect, correctoTexto: m.opciones[m.correcto_idx].texto });
+
+  // Update pips
+  const pips = document.getElementById('scorePips');
+  pips.innerHTML = MOMENTOS.map((_, i) => {
+    let cls = 'pip';
+    if (i < answers.length) cls += answers[i].correcto ? ' correct' : ' incorrect';
+    else if (i === currentMomento + 1) cls += ' current';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  document.getElementById('nextBtn').disabled = false;
+
+  // Send to Firebase
+  sendToFirebase(m.id, optIdx, isCorrect);
+}
+
+function nextMomento() {
+  currentMomento++;
+  if (currentMomento >= MOMENTOS.length) {
+    showFinalResult();
+  } else {
+    showMomento(currentMomento);
+    setProgress(currentMomento + 1);
+  }
+}
+
+/* ─── FINAL RESULT ─── */
+function showFinalResult() {
+  const correct = answers.filter(a => a.correcto).length;
+  const total = MOMENTOS.length;
+  const pct = Math.round(correct / total * 100);
+
+  document.getElementById('final-group-label').textContent = `${currentGroup} · ${correct} de ${total} decisiones correctas`;
+  document.getElementById('finalNum').textContent = `${correct}/${total}`;
+
+  let msg;
+  if (correct === 5)      msg = "Protocolo impecable. El grupo aplicó cada paso del proceso de gestión de conflictos de interés con precisión. Esto es exactamente lo que se espera de una Junta bien gobernada.";
+  else if (correct >= 3)  msg = "Buen desempeño con algunas brechas. El grupo conoce los principios pero bajo presión cedió en algunos puntos clave. Esos son exactamente los momentos que hay que trabajar en la práctica real.";
+  else                    msg = "El grupo identificó la lógica correcta en algunos momentos, pero las presiones del caso generaron decisiones que comprometerían el protocolo. Esta es la norma — no la excepción — en juntas reales. Por eso el protocolo debe estar internalizado, no solo conocido.";
+
+  document.getElementById('finalMsg').textContent = msg;
+
+  // Review
+  const rev = document.getElementById('answerReview');
+  rev.innerHTML = answers.map(a => `
+    <div class="review-item ${a.correcto ? 'ok' : 'ko'}">
+      <div class="ri-momento">Momento ${a.momento}: ${a.titulo}</div>
+      <div class="ri-decision">${a.correcto ? '✅' : '❌'} Su decisión: "${a.opcionTexto}"</div>
+      ${!a.correcto ? `<div class="ri-correcto">✓ Correcto era: "${a.correctoTexto}"</div>` : ''}
+    </div>`).join('');
+
+  // Final chip
+  for (let i = 0; i <= 5; i++) {
+    const chip = document.getElementById(`chip-${i}`);
+    if (chip) { chip.classList.remove('active'); chip.classList.add('done'); }
+  }
+  document.getElementById('chip-6').classList.add('active');
+
+  // Send final to Firebase
+  db.ref(`simulacion_s2/${currentGroup}`).set({
+    grupo: currentGroup,
+    correctas: correct,
+    total,
+    pct,
+    timestamp: Date.now(),
+    answers: answers.map(a => ({ momento: a.momento, correcto: a.correcto }))
+  });
+
+  setProgress(6);
+  showSection('sec-final');
+}
+
+/* ─── FIREBASE REALTIME ─── */
+function sendToFirebase(momentoId, optionIdx, isCorrect) {
+  db.ref(`simulacion_s2/${currentGroup}/momentos/m${momentoId}`).set({
+    opcion: optionIdx,
+    correcto: isCorrect,
+    ts: Date.now()
+  });
+}
+
+/* ─── UTILS ─── */
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setProgress(step) {
+  // step 0-6 → 0-100%
+  document.getElementById('progBar').style.width = Math.round(step / 6 * 100) + '%';
+}
+
+function resetGame() {
+  currentMomento = 0;
+  answers = [];
+  answered = false;
+  currentGroup = null;
+  document.getElementById('groupBadge').textContent = 'Sin grupo';
+  document.querySelectorAll('.group-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('startBtn').disabled = true;
+  for (let i = 0; i <= 6; i++) {
+    const chip = document.getElementById(`chip-${i}`);
+    if (chip) { chip.classList.remove('active', 'done'); }
+  }
+  document.getElementById('chip-0').classList.add('active');
+  setProgress(0);
+  showSection('sec-0');
+}
+</script>
+</body>
+</html>
