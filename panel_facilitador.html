@@ -6,316 +6,85 @@
   <title>Panel Facilitador — GC Asobancaria</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
     :root {
-      --bg:      #0b0f1a;
-      --surface: #131929;
-      --card:    #1a2235;
-      --border:  #243050;
-      --gold:    #c9a84c;
-      --gold2:   #e8c97a;
-      --teal:    #2dd4bf;
-      --red:     #f87171;
-      --amber:   #fbbf24;
-      --green:   #34d399;
-      --blue:    #60a5fa;
-      --white:   #f0f4ff;
-      --muted:   #6b7fa3;
-      --dim1:    #c9a84c;
-      --dim2:    #2dd4bf;
-      --dim3:    #f87171;
-      --dim4:    #34d399;
+      --bg:#0b0f1a;--surface:#131929;--card:#1a2235;--border:#243050;
+      --gold:#c9a84c;--gold2:#e8c97a;--teal:#2dd4bf;--red:#f87171;
+      --amber:#fbbf24;--green:#34d399;--blue:#60a5fa;--white:#f0f4ff;--muted:#6b7fa3;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--white);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── Grid background ── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image:
-        linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-      pointer-events: none;
-    }
-
-    /* ── Header ── */
-    .header {
-      position: relative; z-index: 10;
-      background: linear-gradient(90deg, #0d1525 0%, #131929 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 1rem;
-    }
-    .header-left { display: flex; align-items: center; gap: 1.25rem; }
-    .logo-badge {
-      background: var(--gold);
-      color: #0b0f1a;
-      font-weight: 700;
-      font-size: .7rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: .35rem .75rem;
-      border-radius: 4px;
-    }
-    .header-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.15rem;
-      color: var(--white);
-      letter-spacing: -.3px;
-    }
-    .header-sub {
-      font-size: .75rem;
-      color: var(--muted);
-      margin-top: .1rem;
-    }
-    .header-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
-
-    .live-badge {
-      display: flex; align-items: center; gap: .45rem;
-      background: rgba(52,211,153,.12);
-      border: 1px solid rgba(52,211,153,.3);
-      color: var(--green);
-      padding: .35rem .85rem;
-      border-radius: 20px;
-      font-size: .78rem; font-weight: 600;
-    }
-    .live-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--green);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .5; transform: scale(.8); }
-    }
-
-    .btn {
-      padding: .4rem 1rem; border-radius: 6px; border: none;
-      font-size: .8rem; font-weight: 600; cursor: pointer;
-      font-family: inherit; transition: all .2s;
-    }
-    .btn-reset {
-      background: rgba(248,113,113,.12);
-      border: 1px solid rgba(248,113,113,.3);
-      color: var(--red);
-    }
-    .btn-reset:hover { background: rgba(248,113,113,.22); }
-    .btn-demo {
-      background: rgba(201,168,76,.12);
-      border: 1px solid rgba(201,168,76,.3);
-      color: var(--gold);
-    }
-    .btn-demo:hover { background: rgba(201,168,76,.22); }
-
-    /* ── Ticker ── */
-    .ticker {
-      position: relative; z-index: 10;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: .6rem 2rem;
-      display: flex; align-items: center; gap: 2rem;
-      font-size: .8rem; flex-wrap: wrap;
-    }
-    .ticker-item { display: flex; align-items: center; gap: .5rem; }
-    .ticker-label { color: var(--muted); font-weight: 500; }
-    .ticker-val { font-weight: 700; color: var(--white); font-size: .9rem; }
-    .ticker-val.gold { color: var(--gold); }
-    .ticker-val.teal { color: var(--teal); }
-    .ticker-val.green { color: var(--green); }
-
-    /* ── Main grid ── */
-    .main {
-      position: relative; z-index: 10;
-      max-width: 1400px; margin: 0 auto;
-      padding: 1.5rem 2rem 3rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto;
-      gap: 1.25rem;
-    }
-
-    /* ── Cards ── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-    .card.gold-line::before { background: linear-gradient(90deg, var(--gold), transparent); }
-    .card.teal-line::before { background: linear-gradient(90deg, var(--teal), transparent); }
-    .card.red-line::before  { background: linear-gradient(90deg, var(--red), transparent); }
-    .card.green-line::before { background: linear-gradient(90deg, var(--green), transparent); }
-    .card.blue-line::before { background: linear-gradient(90deg, var(--blue), transparent); }
-
-    .card.span-2 { grid-column: 1 / -1; }
-
-    .card-title {
-      font-size: .7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--muted);
-      margin-bottom: 1.1rem;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .card-title span { color: var(--gold); font-size: .65rem; }
-
-    /* ── Dimension bars ── */
-    .dim-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    .dim-block { }
-    .dim-header {
-      display: flex; justify-content: space-between; align-items: baseline;
-      margin-bottom: .4rem;
-    }
-    .dim-name { font-size: .82rem; font-weight: 600; color: var(--white); }
-    .dim-score {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.5rem;
-      line-height: 1;
-    }
-    .dim-bar-bg {
-      background: rgba(255,255,255,.07);
-      border-radius: 20px; height: 8px; overflow: hidden; margin-bottom: .3rem;
-    }
-    .dim-bar-fill {
-      height: 100%; border-radius: 20px;
-      transition: width 1s cubic-bezier(.4,0,.2,1);
-    }
-    .dim-count { font-size: .72rem; color: var(--muted); }
-
-    /* ── Radar chart ── */
-    .radar-wrap {
-      display: flex; align-items: center; justify-content: center;
-      height: 260px;
-    }
-
-    /* ── Distribution heatmap ── */
-    .dist-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .78rem;
-    }
-    .dist-table th {
-      color: var(--muted);
-      font-weight: 600;
-      padding: .4rem .5rem;
-      text-align: center;
-      font-size: .7rem;
-      letter-spacing: .5px;
-    }
-    .dist-table th.dim-th { text-align: left; }
-    .dist-table td {
-      padding: .4rem .5rem;
-      text-align: center;
-      border-radius: 5px;
-      transition: background .5s;
-    }
-    .dist-table td.dim-td {
-      text-align: left;
-      font-weight: 600;
-      font-size: .75rem;
-      color: var(--white);
-      padding-right: 1rem;
-    }
-    .dist-table tr { border-bottom: 1px solid rgba(255,255,255,.04); }
-
-    /* ── Top questions ── */
-    .question-list { display: flex; flex-direction: column; gap: .6rem; }
-    .q-row {
-      display: flex; align-items: center; gap: .85rem;
-      padding: .65rem .85rem;
-      background: rgba(255,255,255,.03);
-      border-radius: 8px;
-      border-left: 3px solid transparent;
-      transition: all .3s;
-    }
-    .q-row.gap  { border-left-color: var(--red); }
-    .q-row.str  { border-left-color: var(--green); }
-    .q-score {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.3rem; min-width: 2.8rem;
-      text-align: center;
-    }
-    .q-text { font-size: .78rem; line-height: 1.45; color: rgba(240,244,255,.8); flex: 1; }
-    .q-dim-tag {
-      font-size: .65rem; font-weight: 700; text-transform: uppercase;
-      padding: .2rem .5rem; border-radius: 3px; white-space: nowrap;
-    }
-
-    /* ── Gauge ── */
-    .gauges-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin-top: .5rem;
-    }
-    .gauge-block { text-align: center; }
-    .gauge-num {
-      font-family: 'DM Serif Display', serif;
-      font-size: 2.4rem; line-height: 1;
-      margin-bottom: .2rem;
-    }
-    .gauge-label { font-size: .72rem; color: var(--muted); font-weight: 500; line-height: 1.4; }
-    .gauge-bar-wrap {
-      height: 4px; background: rgba(255,255,255,.08);
-      border-radius: 2px; margin: .5rem 0 .25rem; overflow: hidden;
-    }
-    .gauge-bar { height: 100%; border-radius: 2px; transition: width 1s ease; }
-
-    /* ── Empty state ── */
-    .empty-state {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: .75rem; padding: 2.5rem;
-      color: var(--muted); font-size: .88rem; text-align: center;
-      min-height: 120px;
-    }
-    .empty-icon { font-size: 2rem; opacity: .4; }
-
-    /* ── Footer ── */
-    .footer {
-      position: relative; z-index: 10;
-      text-align: center; padding: 1rem;
-      font-size: .72rem; color: var(--muted);
-      border-top: 1px solid var(--border);
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 900px) {
-      .main { grid-template-columns: 1fr; }
-      .card.span-2 { grid-column: 1; }
-      .gauges-row { grid-template-columns: repeat(2,1fr); }
-      .dim-grid { grid-template-columns: 1fr; }
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--white);min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;z-index:0;
+      background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+      background-size:60px 60px;pointer-events:none}
+    .header{position:relative;z-index:10;background:linear-gradient(90deg,#0d1525,#131929);
+      border-bottom:1px solid var(--border);padding:1rem 2rem;
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+    .logo-badge{background:var(--gold);color:#0b0f1a;font-weight:700;font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;padding:.35rem .75rem;border-radius:4px}
+    .header-title{font-size:1.15rem;font-weight:700;color:var(--white)}
+    .header-sub{font-size:.75rem;color:var(--muted);margin-top:.1rem}
+    .header-right{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .live-badge{display:flex;align-items:center;gap:.45rem;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:var(--green);padding:.35rem .85rem;border-radius:20px;font-size:.78rem;font-weight:600}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+    .btn{padding:.4rem 1rem;border-radius:6px;border:none;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+    .btn-reset{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+    .btn-reset:hover{background:rgba(248,113,113,.22)}
+    .btn-demo{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:var(--gold)}
+    .btn-demo:hover{background:rgba(201,168,76,.22)}
+    .ticker{position:relative;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);
+      padding:.6rem 2rem;display:flex;align-items:center;gap:2rem;font-size:.8rem;flex-wrap:wrap}
+    .ticker-item{display:flex;align-items:center;gap:.5rem}
+    .ticker-label{color:var(--muted);font-weight:500}
+    .ticker-val{font-weight:700;color:var(--white);font-size:.9rem}
+    .main{position:relative;z-index:10;max-width:1400px;margin:0 auto;padding:1.5rem 2rem 3rem;
+      display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .card.gold-line::before{background:linear-gradient(90deg,var(--gold),transparent)}
+    .card.teal-line::before{background:linear-gradient(90deg,var(--teal),transparent)}
+    .card.red-line::before{background:linear-gradient(90deg,var(--red),transparent)}
+    .card.green-line::before{background:linear-gradient(90deg,var(--green),transparent)}
+    .card.blue-line::before{background:linear-gradient(90deg,var(--blue),transparent)}
+    .card.span-2{grid-column:1/-1}
+    .card-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:1.1rem;display:flex;align-items:center;justify-content:space-between}
+    .card-title span{color:var(--gold);font-size:.65rem}
+    .dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .dim-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.4rem}
+    .dim-name{font-size:.82rem;font-weight:600;color:var(--white)}
+    .dim-score{font-size:1.5rem;font-weight:800;line-height:1}
+    .dim-bar-bg{background:rgba(255,255,255,.07);border-radius:20px;height:8px;overflow:hidden;margin-bottom:.3rem}
+    .dim-bar-fill{height:100%;border-radius:20px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+    .dim-count{font-size:.72rem;color:var(--muted)}
+    .radar-wrap{display:flex;align-items:center;justify-content:center;height:260px}
+    .dist-table{width:100%;border-collapse:collapse;font-size:.78rem}
+    .dist-table th{color:var(--muted);font-weight:600;padding:.4rem .5rem;text-align:center;font-size:.7rem;letter-spacing:.5px}
+    .dist-table th.dim-th{text-align:left}
+    .dist-table td{padding:.4rem .5rem;text-align:center;border-radius:5px;transition:background .5s}
+    .dist-table td.dim-td{text-align:left;font-weight:600;font-size:.75rem;color:var(--white);padding-right:1rem}
+    .dist-table tr{border-bottom:1px solid rgba(255,255,255,.04)}
+    .question-list{display:flex;flex-direction:column;gap:.6rem}
+    .q-row{display:flex;align-items:center;gap:.85rem;padding:.65rem .85rem;background:rgba(255,255,255,.03);border-radius:8px;border-left:3px solid transparent}
+    .q-row.gap{border-left-color:var(--red)}
+    .q-row.str{border-left-color:var(--green)}
+    .q-score{font-size:1.3rem;font-weight:800;min-width:2.8rem;text-align:center}
+    .q-text{font-size:.78rem;line-height:1.45;color:rgba(240,244,255,.8);flex:1}
+    .q-dim-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;padding:.2rem .5rem;border-radius:3px;white-space:nowrap}
+    .gauges-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:.5rem}
+    .gauge-block{text-align:center}
+    .gauge-num{font-size:2.4rem;font-weight:800;line-height:1;margin-bottom:.2rem}
+    .gauge-label{font-size:.72rem;color:var(--muted);font-weight:500;line-height:1.4}
+    .gauge-bar-wrap{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin:.5rem 0 .25rem;overflow:hidden}
+    .gauge-bar{height:100%;border-radius:2px;transition:width 1s ease}
+    .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:2.5rem;color:var(--muted);font-size:.88rem;text-align:center;min-height:120px}
+    .empty-icon{font-size:2rem;opacity:.4}
+    .footer{position:relative;z-index:10;text-align:center;padding:1rem;font-size:.72rem;color:var(--muted);border-top:1px solid var(--border)}
+    @media(max-width:900px){.main{grid-template-columns:1fr}.card.span-2{grid-column:1}.gauges-row{grid-template-columns:repeat(2,1fr)}.dim-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header">
-  <div class="header-left">
+  <div style="display:flex;align-items:center;gap:1.25rem">
     <div class="logo-badge">Asobancaria</div>
     <div>
       <div class="header-title">Panel del Facilitador — Gobierno Corporativo</div>
@@ -329,486 +98,257 @@
   </div>
 </header>
 
-<!-- TICKER -->
 <div class="ticker">
-  <div class="ticker-item">
-    <span class="ticker-label">Participantes</span>
-    <span class="ticker-val gold" id="tick-count">0</span>
-  </div>
-  <div class="ticker-item">
-    <span class="ticker-label">Promedio general</span>
-    <span class="ticker-val teal" id="tick-avg">—</span>
-  </div>
-  <div class="ticker-item">
-    <span class="ticker-label">Dimensión más fuerte</span>
-    <span class="ticker-val green" id="tick-strong">—</span>
-  </div>
-  <div class="ticker-item">
-    <span class="ticker-label">Brecha más crítica</span>
-    <span class="ticker-val" style="color:var(--red)" id="tick-gap">—</span>
-  </div>
-  <div class="ticker-item" style="margin-left:auto">
-    <span class="ticker-label">Última actualización</span>
-    <span class="ticker-val" id="tick-time" style="font-size:.78rem;color:var(--muted)">—</span>
-  </div>
+  <div class="ticker-item"><span class="ticker-label">Participantes</span><span class="ticker-val" style="color:var(--gold)" id="tick-count">0</span></div>
+  <div class="ticker-item"><span class="ticker-label">Promedio general</span><span class="ticker-val" style="color:var(--teal)" id="tick-avg">—</span></div>
+  <div class="ticker-item"><span class="ticker-label">Dimensión más fuerte</span><span class="ticker-val" style="color:var(--green)" id="tick-strong">—</span></div>
+  <div class="ticker-item"><span class="ticker-label">Brecha más crítica</span><span class="ticker-val" style="color:var(--red)" id="tick-gap">—</span></div>
+  <div class="ticker-item" style="margin-left:auto"><span class="ticker-label">Última actualización</span><span class="ticker-val" id="tick-time" style="font-size:.78rem;color:var(--muted)">—</span></div>
 </div>
 
-<!-- MAIN GRID -->
 <main class="main">
-
-  <!-- Card 1: Promedios por dimensión -->
   <div class="card gold-line">
     <div class="card-title">Madurez por Dimensión <span>Escala 1–5</span></div>
     <div class="dim-grid" id="dim-bars">
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">📊</div>
-        <div>Esperando respuestas del grupo…</div>
-        <div style="font-size:.75rem;opacity:.6">Las barras aparecerán cuando los participantes completen el diagnóstico</div>
-      </div>
+      <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📊</div><div>Esperando respuestas del grupo…</div></div>
     </div>
   </div>
 
-  <!-- Card 2: Radar chart -->
   <div class="card teal-line">
     <div class="card-title">Perfil de Madurez GC <span>Radar consolidado</span></div>
-    <div class="radar-wrap">
-      <canvas id="radarChart" width="260" height="260"></canvas>
-    </div>
+    <div class="radar-wrap"><canvas id="radarChart" width="260" height="260"></canvas></div>
   </div>
 
-  <!-- Card 3: Distribución de respuestas (heatmap) -->
   <div class="card blue-line span-2">
     <div class="card-title">Distribución de Respuestas <span>% por valor · por dimensión</span></div>
-    <div id="dist-container">
-      <div class="empty-state">
-        <div class="empty-icon">🔥</div>
-        <div>El mapa de calor se generará con las respuestas del grupo</div>
-      </div>
-    </div>
+    <div id="dist-container"><div class="empty-state"><div class="empty-icon">🔥</div><div>El mapa de calor se generará con las respuestas del grupo</div></div></div>
   </div>
 
-  <!-- Card 4: Brechas y fortalezas -->
   <div class="card red-line">
     <div class="card-title">⚠️ Brechas Críticas <span>Preguntas con menor puntaje</span></div>
-    <div class="question-list" id="gaps-list">
-      <div class="empty-state"><div class="empty-icon">🔍</div><div>Sin datos aún</div></div>
-    </div>
+    <div class="question-list" id="gaps-list"><div class="empty-state"><div class="empty-icon">🔍</div><div>Sin datos aún</div></div></div>
   </div>
 
-  <!-- Card 5: Fortalezas -->
   <div class="card green-line">
     <div class="card-title">✅ Fortalezas del Grupo <span>Preguntas con mayor puntaje</span></div>
-    <div class="question-list" id="strengths-list">
-      <div class="empty-state"><div class="empty-icon">💪</div><div>Sin datos aún</div></div>
-    </div>
+    <div class="question-list" id="strengths-list"><div class="empty-state"><div class="empty-icon">💪</div><div>Sin datos aún</div></div></div>
   </div>
 
-  <!-- Card 6: Indicadores resumen -->
-  <div class="card span-2" style="border-color:var(--border);">
+  <div class="card span-2">
     <div class="card-title">Indicadores Generales del Grupo</div>
-    <div class="gauges-row" id="gauges-row">
-      <div class="gauge-block">
-        <div class="gauge-num" style="color:var(--gold)" id="g-total">0</div>
-        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-total" style="background:var(--gold);width:0%"></div></div>
-        <div class="gauge-label">Respuestas recibidas</div>
-      </div>
-      <div class="gauge-block">
-        <div class="gauge-num" style="color:var(--teal)" id="g-avg">—</div>
-        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-avg" style="background:var(--teal);width:0%"></div></div>
-        <div class="gauge-label">Promedio general (/ 5)</div>
-      </div>
-      <div class="gauge-block">
-        <div class="gauge-num" style="color:var(--red)" id="g-gap">—</div>
-        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-gap" style="background:var(--red);width:0%"></div></div>
-        <div class="gauge-label">Dimensión con mayor brecha</div>
-      </div>
-      <div class="gauge-block">
-        <div class="gauge-num" style="color:var(--green)" id="g-str">—</div>
-        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-str" style="background:var(--green);width:0%"></div></div>
-        <div class="gauge-label">Dimensión más desarrollada</div>
-      </div>
+    <div class="gauges-row">
+      <div class="gauge-block"><div class="gauge-num" style="color:var(--gold)" id="g-total">0</div><div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-total" style="background:var(--gold);width:0%"></div></div><div class="gauge-label">Respuestas recibidas</div></div>
+      <div class="gauge-block"><div class="gauge-num" style="color:var(--teal)" id="g-avg">—</div><div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-avg" style="background:var(--teal);width:0%"></div></div><div class="gauge-label">Promedio general (/ 5)</div></div>
+      <div class="gauge-block"><div class="gauge-num" style="color:var(--red)" id="g-gap">—</div><div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-gap" style="background:var(--red);width:0%"></div></div><div class="gauge-label">Dimensión con mayor brecha</div></div>
+      <div class="gauge-block"><div class="gauge-num" style="color:var(--green)" id="g-str">—</div><div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-str" style="background:var(--green);width:0%"></div></div><div class="gauge-label">Dimensión más desarrollada</div></div>
     </div>
   </div>
-
 </main>
 
-<footer class="footer">
-  Panel del Facilitador · Gobierno Corporativo y Juntas Directivas · Sesión 1 · Asobancaria · Universidad EAFIT
-</footer>
+<footer class="footer">Panel del Facilitador · Gobierno Corporativo y Juntas Directivas · Sesión 1 · Asobancaria · Universidad EAFIT</footer>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyC9KSd8-eV17_fH5zjD3nR3QpAA0D1QpFU",
+    authDomain: "gc-asobancaria.firebaseapp.com",
+    databaseURL: "https://gc-asobancaria-default-rtdb.firebaseio.com",
+    projectId: "gc-asobancaria",
+    storageBucket: "gc-asobancaria.firebasestorage.app",
+    messagingSenderId: "36253900055",
+    appId: "1:36253900055:web:d0313cf1ef1db5b333eb52"
+  });
+
+  const db = getDatabase(app);
+  const responsesRef = ref(db, 'sesion1/respuestas');
+
+  // Escucha cambios en tiempo real
+  onValue(responsesRef, (snapshot) => {
+    const data = snapshot.val();
+    const list = data ? Object.values(data) : [];
+    window._render(list);
+  });
+
+  // Reiniciar datos
+  window._fbDelete = () => remove(responsesRef);
+</script>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
-//  DATA MODEL
-// ═══════════════════════════════════════════════════════════════════
-
-const STORAGE_KEY = 'gc_asobancaria_responses';
-
 const QUESTIONS = [
-  { id:'q1',  dim:'junta',   text:'La Junta Directiva ejerce un rol estratégico claro, diferenciado de la gestión operativa.' },
-  { id:'q2',  dim:'junta',   text:'Existe una evaluación periódica y formal del desempeño de la Junta y sus miembros.' },
-  { id:'q3',  dim:'junta',   text:'Los miembros independientes tienen condiciones reales para actuar con independencia de criterio.' },
-  { id:'q4',  dim:'junta',   text:'Los comités de la Junta (Auditoría, Riesgos, etc.) sesionan con regularidad y cuentan con miembros idóneos.' },
-  { id:'q5',  dim:'trans',   text:'Asobancaria divulga información relevante de manera oportuna, completa y accesible a sus grupos de interés.' },
-  { id:'q6',  dim:'trans',   text:'Existe un Código de Ética con mecanismos efectivos de denuncia y seguimiento.' },
-  { id:'q7',  dim:'trans',   text:'La política de conflictos de interés se aplica de manera rigurosa y transparente.' },
-  { id:'q8',  dim:'trans',   text:'El informe de GC refleja fielmente las prácticas reales de gobierno, no solo el cumplimiento formal.' },
-  { id:'q9',  dim:'control', text:'El sistema de control interno opera con efectividad e independencia frente a la administración.' },
-  { id:'q10', dim:'control', text:'La gestión de riesgos es integral, proactiva y está integrada a la toma de decisiones estratégicas.' },
-  { id:'q11', dim:'control', text:'La auditoría externa (revisoría fiscal) cumple su función con objetividad e independencia real.' },
-  { id:'q12', dim:'control', text:'Las observaciones de control interno y externo se atienden de manera oportuna con planes de mejora.' },
-  { id:'q13', dim:'sost',    text:'Asobancaria incorpora criterios ASG (Ambiental, Social y Gobernanza) en su estrategia institucional.' },
-  { id:'q14', dim:'sost',    text:'Existe una política de inclusión y diversidad efectiva en los órganos de gobierno.' },
-  { id:'q15', dim:'sost',    text:'Los grupos de interés (afiliados, empleados, reguladores) participan activamente en decisiones clave.' },
-  { id:'q16', dim:'sost',    text:'La sostenibilidad es un eje genuino de la estrategia gremial, no solo un requisito de comunicación.' },
+  {id:'q1', dim:'junta',   text:'La Junta Directiva ejerce un rol estratégico claro, diferenciado de la gestión operativa.'},
+  {id:'q2', dim:'junta',   text:'Existe una evaluación periódica y formal del desempeño de la Junta y sus miembros.'},
+  {id:'q3', dim:'junta',   text:'Los miembros independientes tienen condiciones reales para actuar con independencia de criterio.'},
+  {id:'q4', dim:'junta',   text:'Los comités de la Junta (Auditoría, Riesgos, etc.) sesionan con regularidad y cuentan con miembros idóneos.'},
+  {id:'q5', dim:'trans',   text:'Asobancaria divulga información relevante de manera oportuna, completa y accesible a sus grupos de interés.'},
+  {id:'q6', dim:'trans',   text:'Existe un Código de Ética con mecanismos efectivos de denuncia y seguimiento.'},
+  {id:'q7', dim:'trans',   text:'La política de conflictos de interés se aplica de manera rigurosa y transparente.'},
+  {id:'q8', dim:'trans',   text:'El informe de GC refleja fielmente las prácticas reales de gobierno, no solo el cumplimiento formal.'},
+  {id:'q9', dim:'control', text:'El sistema de control interno opera con efectividad e independencia frente a la administración.'},
+  {id:'q10',dim:'control', text:'La gestión de riesgos es integral, proactiva y está integrada a la toma de decisiones estratégicas.'},
+  {id:'q11',dim:'control', text:'La auditoría externa (revisoría fiscal) cumple su función con objetividad e independencia real.'},
+  {id:'q12',dim:'control', text:'Las observaciones de control interno y externo se atienden de manera oportuna con planes de mejora.'},
+  {id:'q13',dim:'sost',    text:'Asobancaria incorpora criterios ASG (Ambiental, Social y Gobernanza) en su estrategia institucional.'},
+  {id:'q14',dim:'sost',    text:'Existe una política de inclusión y diversidad efectiva en los órganos de gobierno.'},
+  {id:'q15',dim:'sost',    text:'Los grupos de interés (afiliados, empleados, reguladores) participan activamente en decisiones clave.'},
+  {id:'q16',dim:'sost',    text:'La sostenibilidad es un eje genuino de la estrategia gremial, no solo un requisito de comunicación.'},
 ];
-
 const DIMS = {
-  junta:   { label: 'Junta Directiva',   color: 'var(--dim1)', hex: '#c9a84c' },
-  trans:   { label: 'Transparencia',     color: 'var(--dim2)', hex: '#2dd4bf' },
-  control: { label: 'Control y Riesgos', color: 'var(--dim3)', hex: '#f87171' },
-  sost:    { label: 'Sostenibilidad',    color: 'var(--dim4)', hex: '#34d399' },
+  junta:  {label:'Junta Directiva',   hex:'#c9a84c'},
+  trans:  {label:'Transparencia',     hex:'#2dd4bf'},
+  control:{label:'Control y Riesgos', hex:'#f87171'},
+  sost:   {label:'Sostenibilidad',    hex:'#34d399'},
 };
-
 const DIM_KEYS = ['junta','trans','control','sost'];
-
 let radarChart = null;
-
-// ═══════════════════════════════════════════════════════════════════
-//  DATA ACCESS  (localStorage — same origin as taller_participante)
-// ═══════════════════════════════════════════════════════════════════
-
-function getAllResponses() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch { return []; }
-}
-
-function resetData() {
-  if (!confirm('¿Reiniciar todos los datos del diagnóstico? Esta acción no se puede deshacer.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  render([]);
-}
-
-// ═══════════════════════════════════════════════════════════════════
-//  ANALYTICS
-// ═══════════════════════════════════════════════════════════════════
 
 function computeStats(responses) {
   if (!responses.length) return null;
-
   const n = responses.length;
-
-  // Aggregate all answers per question
-  const qTotals = {};
-  const qCounts = {};
-  QUESTIONS.forEach(q => { qTotals[q.id] = 0; qCounts[q.id] = 0; });
-
-  responses.forEach(resp => {
-    if (!resp.answers) return;
-    Object.entries(resp.answers).forEach(([qid, val]) => {
-      if (qTotals[qid] !== undefined) {
-        qTotals[qid] += val;
-        qCounts[qid]++;
-      }
+  const qTotals={}, qCounts={};
+  QUESTIONS.forEach(q=>{qTotals[q.id]=0;qCounts[q.id]=0});
+  responses.forEach(r=>{
+    if (!r.answers) return;
+    Object.entries(r.answers).forEach(([qid,val])=>{
+      if (qTotals[qid]!==undefined){qTotals[qid]+=val;qCounts[qid]++}
     });
   });
-
-  // Per-question averages
-  const qAvgs = {};
-  QUESTIONS.forEach(q => {
-    qAvgs[q.id] = qCounts[q.id] > 0 ? qTotals[q.id] / qCounts[q.id] : null;
+  const qAvgs={};
+  QUESTIONS.forEach(q=>{qAvgs[q.id]=qCounts[q.id]>0?qTotals[q.id]/qCounts[q.id]:null});
+  const dimAvgs={};
+  DIM_KEYS.forEach(dim=>{
+    const vals=QUESTIONS.filter(q=>q.dim===dim).map(q=>qAvgs[q.id]).filter(v=>v!==null);
+    dimAvgs[dim]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
   });
-
-  // Per-dimension averages
-  const dimAvgs = {};
-  DIM_KEYS.forEach(dim => {
-    const qs = QUESTIONS.filter(q => q.dim === dim);
-    const vals = qs.map(q => qAvgs[q.id]).filter(v => v !== null);
-    dimAvgs[dim] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
-  });
-
-  // Overall average
-  const allVals = Object.values(dimAvgs).filter(v => v !== null);
-  const overall = allVals.length ? allVals.reduce((a,b)=>a+b,0)/allVals.length : null;
-
-  // Distribution: for each dim, % of responses at each value 1-5
-  const dist = {};
-  DIM_KEYS.forEach(dim => {
-    dist[dim] = [0,0,0,0,0]; // index 0 = value 1
-    const qs = QUESTIONS.filter(q => q.dim === dim);
-    let total = 0;
-    responses.forEach(resp => {
-      if (!resp.answers) return;
-      qs.forEach(q => {
-        if (resp.answers[q.id]) {
-          dist[dim][resp.answers[q.id]-1]++;
-          total++;
-        }
-      });
+  const allVals=Object.values(dimAvgs).filter(v=>v!==null);
+  const overall=allVals.length?allVals.reduce((a,b)=>a+b,0)/allVals.length:null;
+  const dist={};
+  DIM_KEYS.forEach(dim=>{
+    dist[dim]=[0,0,0,0,0];
+    let total=0;
+    const qs=QUESTIONS.filter(q=>q.dim===dim);
+    responses.forEach(r=>{
+      if (!r.answers) return;
+      qs.forEach(q=>{if(r.answers[q.id]){dist[dim][r.answers[q.id]-1]++;total++}});
     });
-    if (total > 0) dist[dim] = dist[dim].map(v => Math.round(v/total*100));
+    if(total>0) dist[dim]=dist[dim].map(v=>Math.round(v/total*100));
   });
-
-  // Sorted questions for gaps & strengths
-  const sortedQ = QUESTIONS
-    .map(q => ({ ...q, avg: qAvgs[q.id] }))
-    .filter(q => q.avg !== null)
-    .sort((a,b) => a.avg - b.avg);
-
-  const gaps = sortedQ.slice(0, 4);
-  const strengths = sortedQ.slice(-4).reverse();
-
-  // Best and worst dim
-  const dimSorted = DIM_KEYS
-    .filter(d => dimAvgs[d] !== null)
-    .sort((a,b) => dimAvgs[a] - dimAvgs[b]);
-  const worstDim  = dimSorted[0] || null;
-  const bestDim   = dimSorted[dimSorted.length-1] || null;
-
-  return { n, overall, dimAvgs, qAvgs, dist, gaps, strengths, worstDim, bestDim };
+  const sortedQ=QUESTIONS.map(q=>({...q,avg:qAvgs[q.id]})).filter(q=>q.avg!==null).sort((a,b)=>a.avg-b.avg);
+  const dimSorted=DIM_KEYS.filter(d=>dimAvgs[d]!==null).sort((a,b)=>dimAvgs[a]-dimAvgs[b]);
+  return {n,overall,dimAvgs,qAvgs,dist,gaps:sortedQ.slice(0,4),strengths:sortedQ.slice(-4).reverse(),worstDim:dimSorted[0]||null,bestDim:dimSorted[dimSorted.length-1]||null};
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════════════════════════════
+function fmt(v){return v!==null?v.toFixed(2):'—'}
+function scoreColor(v){if(v===null)return'var(--muted)';if(v>=4)return'var(--green)';if(v>=3)return'var(--gold)';if(v>=2)return'var(--amber)';return'var(--red)'}
 
-function fmt(v) { return v !== null ? v.toFixed(2) : '—'; }
-function pct(v) { return v !== null ? ((v-1)/4*100).toFixed(0) + '%' : '0%'; }
-
-function scoreColor(v) {
-  if (v === null) return 'var(--muted)';
-  if (v >= 4) return 'var(--green)';
-  if (v >= 3) return 'var(--gold)';
-  if (v >= 2) return 'var(--amber)';
-  return 'var(--red)';
-}
-
-function render(responses) {
+window._render = function(responses) {
   const stats = computeStats(responses);
 
-  // ── Ticker ──
-  document.getElementById('tick-count').textContent = stats ? stats.n : 0;
-  document.getElementById('tick-avg').textContent = stats ? fmt(stats.overall) + '/5' : '—';
-  document.getElementById('tick-strong').textContent = stats && stats.bestDim
-    ? DIMS[stats.bestDim].label + ' · ' + fmt(stats.dimAvgs[stats.bestDim]) : '—';
-  document.getElementById('tick-gap').textContent = stats && stats.worstDim
-    ? DIMS[stats.worstDim].label + ' · ' + fmt(stats.dimAvgs[stats.worstDim]) : '—';
-  document.getElementById('tick-time').textContent = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  document.getElementById('tick-count').textContent = stats?stats.n:0;
+  document.getElementById('tick-avg').textContent = stats?fmt(stats.overall)+'/5':'—';
+  document.getElementById('tick-strong').textContent = stats&&stats.bestDim?DIMS[stats.bestDim].label+' · '+fmt(stats.dimAvgs[stats.bestDim]):'—';
+  document.getElementById('tick-gap').textContent = stats&&stats.worstDim?DIMS[stats.worstDim].label+' · '+fmt(stats.dimAvgs[stats.worstDim]):'—';
+  document.getElementById('tick-time').textContent = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
-  // ── Dimension bars ──
-  const dimContainer = document.getElementById('dim-bars');
+  // Dimension bars
+  const dc = document.getElementById('dim-bars');
   if (!stats) {
-    dimContainer.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📊</div><div>Esperando respuestas del grupo…</div><div style="font-size:.75rem;opacity:.6">Las barras aparecerán cuando los participantes completen el diagnóstico</div></div>`;
+    dc.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📊</div><div>Esperando respuestas del grupo…</div></div>';
   } else {
-    dimContainer.innerHTML = DIM_KEYS.map(dim => {
-      const v = stats.dimAvgs[dim];
-      const pctVal = v !== null ? ((v-1)/4*100) : 0;
-      return `
-        <div class="dim-block">
-          <div class="dim-header">
-            <div class="dim-name">${DIMS[dim].label}</div>
-            <div class="dim-score" style="color:${DIMS[dim].color}">${fmt(v)}</div>
-          </div>
-          <div class="dim-bar-bg">
-            <div class="dim-bar-fill" style="width:${pctVal}%;background:${DIMS[dim].color}"></div>
-          </div>
-          <div class="dim-count">${stats.n} participante${stats.n!==1?'s':''} · ${QUESTIONS.filter(q=>q.dim===dim).length} preguntas</div>
-        </div>`;
+    dc.innerHTML = DIM_KEYS.map(dim=>{
+      const v=stats.dimAvgs[dim], p=v?(((v-1)/4)*100):0;
+      return `<div><div class="dim-header"><div class="dim-name">${DIMS[dim].label}</div><div class="dim-score" style="color:${DIMS[dim].hex}">${fmt(v)}</div></div>
+        <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${p}%;background:${DIMS[dim].hex}"></div></div>
+        <div class="dim-count">${stats.n} participante${stats.n!==1?'s':''}</div></div>`;
     }).join('');
   }
 
-  // ── Radar chart ──
-  const radarData = DIM_KEYS.map(dim => stats ? (stats.dimAvgs[dim] || 0) : 0);
-  const radarCtx = document.getElementById('radarChart').getContext('2d');
-
-  if (radarChart) {
-    radarChart.data.datasets[0].data = radarData;
-    radarChart.update('active');
-  } else {
-    radarChart = new Chart(radarCtx, {
-      type: 'radar',
-      data: {
-        labels: DIM_KEYS.map(d => DIMS[d].label),
-        datasets: [{
-          label: 'Madurez GC',
-          data: radarData,
-          backgroundColor: 'rgba(201,168,76,.15)',
-          borderColor: '#c9a84c',
-          borderWidth: 2.5,
-          pointBackgroundColor: DIM_KEYS.map(d => DIMS[d].hex),
-          pointBorderColor: '#0b0f1a',
-          pointBorderWidth: 2,
-          pointRadius: 6,
-          fill: true,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          r: {
-            min: 0, max: 5,
-            ticks: {
-              stepSize: 1,
-              color: 'rgba(107,127,163,.7)',
-              font: { size: 9, family: 'DM Sans' },
-              backdropColor: 'transparent',
-            },
-            grid: { color: 'rgba(255,255,255,.07)' },
-            angleLines: { color: 'rgba(255,255,255,.07)' },
-            pointLabels: {
-              color: 'rgba(240,244,255,.8)',
-              font: { size: 11, weight: '600', family: 'DM Sans' },
-            }
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#1a2235',
-            borderColor: '#243050',
-            borderWidth: 1,
-            titleColor: '#c9a84c',
-            bodyColor: '#f0f4ff',
-            callbacks: {
-              label: ctx => ` ${ctx.formattedValue} / 5`
-            }
-          }
-        },
-        animation: { duration: 800, easing: 'easeInOutQuart' }
-      }
-    });
+  // Radar
+  const radarData = DIM_KEYS.map(dim=>stats?(stats.dimAvgs[dim]||0):0);
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  if (radarChart) { radarChart.data.datasets[0].data=radarData; radarChart.update('active'); }
+  else {
+    radarChart = new Chart(ctx,{type:'radar',data:{
+      labels:DIM_KEYS.map(d=>DIMS[d].label),
+      datasets:[{label:'Madurez GC',data:radarData,backgroundColor:'rgba(201,168,76,.15)',borderColor:'#c9a84c',borderWidth:2.5,
+        pointBackgroundColor:DIM_KEYS.map(d=>DIMS[d].hex),pointBorderColor:'#0b0f1a',pointBorderWidth:2,pointRadius:6,fill:true}]
+    },options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:5,ticks:{stepSize:1,color:'rgba(107,127,163,.7)',font:{size:9},backdropColor:'transparent'},
+        grid:{color:'rgba(255,255,255,.07)'},angleLines:{color:'rgba(255,255,255,.07)'},
+        pointLabels:{color:'rgba(240,244,255,.8)',font:{size:11,weight:'600'}}}},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2235',borderColor:'#243050',borderWidth:1,titleColor:'#c9a84c',bodyColor:'#f0f4ff',
+        callbacks:{label:ctx=>` ${ctx.formattedValue} / 5`}}},
+      animation:{duration:800,easing:'easeInOutQuart'}}});
   }
 
-  // ── Distribution heatmap ──
-  const distContainer = document.getElementById('dist-container');
+  // Distribution heatmap
+  const distC = document.getElementById('dist-container');
   if (!stats) {
-    distContainer.innerHTML = `<div class="empty-state"><div class="empty-icon">🔥</div><div>El mapa de calor se generará con las respuestas del grupo</div></div>`;
+    distC.innerHTML='<div class="empty-state"><div class="empty-icon">🔥</div><div>El mapa de calor se generará con las respuestas del grupo</div></div>';
   } else {
-    const heatColor = (pct) => {
-      if (pct === 0) return 'transparent';
-      const alpha = Math.min(pct / 60, 1);
-      if (pct >= 40) return `rgba(201,168,76,${alpha})`;
-      if (pct >= 20) return `rgba(45,212,191,${alpha * .8})`;
-      return `rgba(107,127,163,${alpha * .6})`;
-    };
-    distContainer.innerHTML = `
-      <table class="dist-table">
-        <thead>
-          <tr>
-            <th class="dim-th">Dimensión</th>
-            <th>1 — No existe</th>
-            <th>2</th>
-            <th>3 — Con brechas</th>
-            <th>4</th>
-            <th>5 — Efectivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${DIM_KEYS.map(dim => `
-            <tr>
-              <td class="dim-td" style="color:${DIMS[dim].hex}">${DIMS[dim].label}</td>
-              ${stats.dist[dim].map(p => `<td style="background:${heatColor(p)};color:${p>25?'#0b0f1a':'rgba(240,244,255,.7)'};font-weight:${p>25?700:400}">${p > 0 ? p+'%' : '·'}</td>`).join('')}
-            </tr>`).join('')}
-        </tbody>
-      </table>`;
+    const hc=(p)=>{if(!p)return'transparent';const a=Math.min(p/60,1);if(p>=40)return`rgba(201,168,76,${a})`;if(p>=20)return`rgba(45,212,191,${a*.8})`;return`rgba(107,127,163,${a*.6})`};
+    distC.innerHTML=`<table class="dist-table"><thead><tr>
+      <th class="dim-th">Dimensión</th><th>1 — No existe</th><th>2</th><th>3 — Con brechas</th><th>4</th><th>5 — Efectivo</th></tr></thead>
+      <tbody>${DIM_KEYS.map(dim=>`<tr><td class="dim-td" style="color:${DIMS[dim].hex}">${DIMS[dim].label}</td>
+        ${stats.dist[dim].map(p=>`<td style="background:${hc(p)};color:${p>25?'#0b0f1a':'rgba(240,244,255,.7)'};font-weight:${p>25?700:400}">${p>0?p+'%':'·'}</td>`).join('')}</tr>`).join('')}
+      </tbody></table>`;
   }
 
-  // ── Gaps ──
-  const gapsList = document.getElementById('gaps-list');
-  if (!stats || !stats.gaps.length) {
-    gapsList.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div>Sin datos aún</div></div>`;
-  } else {
-    gapsList.innerHTML = stats.gaps.map(q => `
-      <div class="q-row gap">
-        <div class="q-score" style="color:${scoreColor(q.avg)}">${fmt(q.avg)}</div>
-        <div class="q-text">${q.text}</div>
-        <div class="q-dim-tag" style="background:${DIMS[q.dim].hex}22;color:${DIMS[q.dim].hex}">${DIMS[q.dim].label.split(' ')[0]}</div>
-      </div>`).join('');
-  }
+  // Gaps
+  const gl = document.getElementById('gaps-list');
+  if (!stats||!stats.gaps.length) { gl.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div>Sin datos aún</div></div>'; }
+  else gl.innerHTML=stats.gaps.map(q=>`<div class="q-row gap">
+    <div class="q-score" style="color:${scoreColor(q.avg)}">${fmt(q.avg)}</div>
+    <div class="q-text">${q.text}</div>
+    <div class="q-dim-tag" style="background:${DIMS[q.dim].hex}22;color:${DIMS[q.dim].hex}">${DIMS[q.dim].label.split(' ')[0]}</div></div>`).join('');
 
-  // ── Strengths ──
-  const strList = document.getElementById('strengths-list');
-  if (!stats || !stats.strengths.length) {
-    strList.innerHTML = `<div class="empty-state"><div class="empty-icon">💪</div><div>Sin datos aún</div></div>`;
-  } else {
-    strList.innerHTML = stats.strengths.map(q => `
-      <div class="q-row str">
-        <div class="q-score" style="color:${scoreColor(q.avg)}">${fmt(q.avg)}</div>
-        <div class="q-text">${q.text}</div>
-        <div class="q-dim-tag" style="background:${DIMS[q.dim].hex}22;color:${DIMS[q.dim].hex}">${DIMS[q.dim].label.split(' ')[0]}</div>
-      </div>`).join('');
-  }
+  // Strengths
+  const sl = document.getElementById('strengths-list');
+  if (!stats||!stats.strengths.length) { sl.innerHTML='<div class="empty-state"><div class="empty-icon">💪</div><div>Sin datos aún</div></div>'; }
+  else sl.innerHTML=stats.strengths.map(q=>`<div class="q-row str">
+    <div class="q-score" style="color:${scoreColor(q.avg)}">${fmt(q.avg)}</div>
+    <div class="q-text">${q.text}</div>
+    <div class="q-dim-tag" style="background:${DIMS[q.dim].hex}22;color:${DIMS[q.dim].hex}">${DIMS[q.dim].label.split(' ')[0]}</div></div>`).join('');
 
-  // ── Gauges ──
-  document.getElementById('g-total').textContent = stats ? stats.n : 0;
-  document.getElementById('gb-total').style.width = stats ? Math.min(stats.n/30*100,100)+'%' : '0%';
+  // Gauges
+  document.getElementById('g-total').textContent=stats?stats.n:0;
+  document.getElementById('gb-total').style.width=stats?Math.min(stats.n/30*100,100)+'%':'0%';
+  document.getElementById('g-avg').textContent=stats?fmt(stats.overall):'—';
+  document.getElementById('gb-avg').style.width=stats&&stats.overall?(((stats.overall-1)/4)*100)+'%':'0%';
+  if(stats&&stats.worstDim){document.getElementById('g-gap').textContent=DIMS[stats.worstDim].label.split(' ')[0];document.getElementById('gb-gap').style.width=(((stats.dimAvgs[stats.worstDim]-1)/4)*100)+'%';}
+  else document.getElementById('g-gap').textContent='—';
+  if(stats&&stats.bestDim){document.getElementById('g-str').textContent=DIMS[stats.bestDim].label.split(' ')[0];document.getElementById('gb-str').style.width=(((stats.dimAvgs[stats.bestDim]-1)/4)*100)+'%';}
+  else document.getElementById('g-str').textContent='—';
+};
 
-  document.getElementById('g-avg').textContent = stats ? fmt(stats.overall) : '—';
-  document.getElementById('gb-avg').style.width = stats && stats.overall ? ((stats.overall-1)/4*100)+'%' : '0%';
-
-  if (stats && stats.worstDim) {
-    const wv = stats.dimAvgs[stats.worstDim];
-    document.getElementById('g-gap').textContent = DIMS[stats.worstDim].label.split(' ')[0];
-    document.getElementById('gb-gap').style.width = wv ? ((wv-1)/4*100)+'%' : '0%';
-  } else {
-    document.getElementById('g-gap').textContent = '—';
-  }
-
-  if (stats && stats.bestDim) {
-    const bv = stats.dimAvgs[stats.bestDim];
-    document.getElementById('g-str').textContent = DIMS[stats.bestDim].label.split(' ')[0];
-    document.getElementById('gb-str').style.width = bv ? ((bv-1)/4*100)+'%' : '0%';
-  } else {
-    document.getElementById('g-str').textContent = '—';
-  }
+async function resetData() {
+  if (!confirm('¿Reiniciar todos los datos? Esta acción no se puede deshacer.')) return;
+  if (window._fbDelete) await window._fbDelete();
 }
-
-// ═══════════════════════════════════════════════════════════════════
-//  DEMO DATA
-// ═══════════════════════════════════════════════════════════════════
 
 function loadDemo() {
-  const demoResponses = [];
-  const scenarios = [
-    // Balanced moderate
-    { junta:[3,2,3,2], trans:[4,3,3,2], control:[3,2,3,3], sost:[2,2,3,2] },
-    { junta:[4,3,4,3], trans:[4,4,3,3], control:[4,3,3,4], sost:[3,3,4,3] },
-    { junta:[2,1,2,2], trans:[3,2,2,1], control:[2,2,2,2], sost:[1,1,2,2] },
-    { junta:[5,4,4,4], trans:[4,4,5,4], control:[4,4,4,5], sost:[4,4,4,4] },
-    { junta:[3,3,3,3], trans:[3,3,4,3], control:[3,3,3,3], sost:[3,3,3,3] },
-    { junta:[4,3,3,3], trans:[5,4,4,3], control:[4,3,4,3], sost:[3,2,3,3] },
-    { junta:[2,2,2,1], trans:[3,2,2,2], control:[2,1,2,2], sost:[2,2,1,2] },
-    { junta:[4,4,5,4], trans:[4,3,4,4], control:[5,4,4,4], sost:[4,3,4,4] },
+  const scenarios=[
+    {junta:[3,2,3,2],trans:[4,3,3,2],control:[3,2,3,3],sost:[2,2,3,2]},
+    {junta:[4,3,4,3],trans:[4,4,3,3],control:[4,3,3,4],sost:[3,3,4,3]},
+    {junta:[2,1,2,2],trans:[3,2,2,1],control:[2,2,2,2],sost:[1,1,2,2]},
+    {junta:[5,4,4,4],trans:[4,4,5,4],control:[4,4,4,5],sost:[4,4,4,4]},
+    {junta:[3,3,3,3],trans:[3,3,4,3],control:[3,3,3,3],sost:[3,3,3,3]},
+    {junta:[4,3,3,3],trans:[5,4,4,3],control:[4,3,4,3],sost:[3,2,3,3]},
+    {junta:[2,2,2,1],trans:[3,2,2,2],control:[2,1,2,2],sost:[2,2,1,2]},
+    {junta:[4,4,5,4],trans:[4,3,4,4],control:[5,4,4,4],sost:[4,3,4,4]},
   ];
-  scenarios.forEach((sc, i) => {
-    const answers = {};
-    ['junta','trans','control','sost'].forEach((dim, di) => {
-      QUESTIONS.filter(q=>q.dim===dim).forEach((q, qi) => {
-        answers[q.id] = sc[dim][qi] || 3;
-      });
-    });
-    demoResponses.push({ id: 'demo_' + i, ts: Date.now() - i*30000, answers });
+  const demoList=scenarios.map((sc,i)=>{
+    const answers={};
+    DIM_KEYS.forEach(dim=>{QUESTIONS.filter(q=>q.dim===dim).forEach((q,qi)=>{answers[q.id]=sc[dim][qi]||3})});
+    return {ts:Date.now()-i*30000,answers};
   });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(demoResponses));
-  render(demoResponses);
+  window._render(demoList);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  LIVE POLLING  (same-origin localStorage + BroadcastChannel)
-// ═══════════════════════════════════════════════════════════════════
-
-// BroadcastChannel: instant update when taller_participante writes
-if (typeof BroadcastChannel !== 'undefined') {
-  const bc = new BroadcastChannel('gc_asobancaria');
-  bc.onmessage = () => render(getAllResponses());
-}
-
-// Fallback polling every 4 seconds
-setInterval(() => render(getAllResponses()), 4000);
-
-// Initial render
-render(getAllResponses());
+// Render vacío inicial
+window._render([]);
 </script>
 </body>
 </html>
