@@ -1,416 +1,814 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel Facilitador — GC Asobancaria</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-  :root {
-    --navy:#1E2761; --navyL:#2B3A8A; --navyD:#141B4D;
-    --gold:#C9A84C; --lgold:#F5EDD4;
-    --offwhite:#F4F6FC; --gray:#64748B; --lgray:#E2E8F0;
-    --dark:#1E293B; --red:#991B1B; --green:#065F46; --blue:#1D4ED8;
-    --amber:#92400E; --amberL:#FEF3C7; --greenL:#D1FAE5; --redL:#FEE2E2; --blueL:#DBEAFE;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--navyD);color:white;min-height:100vh;}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel Facilitador — GC Asobancaria</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
-  .header{background:var(--navy);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--gold);}
-  .header h1{font-size:18px;font-weight:800;}
-  .header p{font-size:11px;color:#8BA8C4;margin-top:2px;}
-  .live-badge{background:rgba(6,95,70,0.3);border:2px solid #34D399;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;color:#34D399;display:flex;align-items:center;gap:6px;}
-  .live-dot{width:8px;height:8px;background:#34D399;border-radius:50%;animation:pulse 1.5s infinite;}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    :root {
+      --bg:      #0b0f1a;
+      --surface: #131929;
+      --card:    #1a2235;
+      --border:  #243050;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --teal:    #2dd4bf;
+      --red:     #f87171;
+      --amber:   #fbbf24;
+      --green:   #34d399;
+      --blue:    #60a5fa;
+      --white:   #f0f4ff;
+      --muted:   #6b7fa3;
+      --dim1:    #c9a84c;
+      --dim2:    #2dd4bf;
+      --dim3:    #f87171;
+      --dim4:    #34d399;
+    }
 
-  .main{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* STAT CARDS */
-  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-  @media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr;}}
-  .stat-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px;text-align:center;}
-  .stat-card .stat-label{font-size:10px;font-weight:700;color:#8BA8C4;text-transform:uppercase;letter-spacing:.5px;}
-  .stat-card .stat-val{font-size:36px;font-weight:800;margin-top:4px;}
-  .stat-card .stat-sub{font-size:11px;color:#8BA8C4;margin-top:4px;}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-  /* MAIN GRID */
-  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
-  @media(max-width:780px){.dash-grid{grid-template-columns:1fr;}}
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
 
-  .panel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;}
-  .panel-header{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;}
-  .panel-header h3{font-size:13px;font-weight:700;color:white;}
-  .panel-header span{font-size:11px;color:#8BA8C4;}
-  .panel-body{padding:16px;}
+    /* ── Header ── */
+    .header {
+      position: relative; z-index: 10;
+      background: linear-gradient(90deg, #0d1525 0%, #131929 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .header-left { display: flex; align-items: center; gap: 1.25rem; }
+    .logo-badge {
+      background: var(--gold);
+      color: #0b0f1a;
+      font-weight: 700;
+      font-size: .7rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: .35rem .75rem;
+      border-radius: 4px;
+    }
+    .header-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      color: var(--white);
+      letter-spacing: -.3px;
+    }
+    .header-sub {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: .1rem;
+    }
+    .header-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
 
-  /* DIM BARS */
-  .dim-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-  .dim-label{font-size:11px;font-weight:600;color:#CBD5E1;width:110px;flex-shrink:0;}
-  .dim-bar-bg{flex:1;height:22px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;position:relative;}
-  .dim-bar-fill{height:22px;border-radius:6px;transition:width 1s ease;display:flex;align-items:center;padding-left:8px;}
-  .dim-bar-fill span{font-size:11px;font-weight:700;color:white;}
-  .dim-val{font-size:14px;font-weight:800;width:36px;text-align:right;flex-shrink:0;}
+    .live-badge {
+      display: flex; align-items: center; gap: .45rem;
+      background: rgba(52,211,153,.12);
+      border: 1px solid rgba(52,211,153,.3);
+      color: var(--green);
+      padding: .35rem .85rem;
+      border-radius: 20px;
+      font-size: .78rem; font-weight: 600;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.8); }
+    }
 
-  /* NIVEL DISTRIBUTION */
-  .nivel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .nivel-card{border-radius:8px;padding:12px;text-align:center;}
-  .nivel-card .n-count{font-size:28px;font-weight:800;}
-  .nivel-card .n-label{font-size:10px;font-weight:600;margin-top:2px;}
-  .nivel-card .n-pct{font-size:11px;margin-top:3px;opacity:.8;}
+    .btn {
+      padding: .4rem 1rem; border-radius: 6px; border: none;
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all .2s;
+    }
+    .btn-reset {
+      background: rgba(248,113,113,.12);
+      border: 1px solid rgba(248,113,113,.3);
+      color: var(--red);
+    }
+    .btn-reset:hover { background: rgba(248,113,113,.22); }
+    .btn-demo {
+      background: rgba(201,168,76,.12);
+      border: 1px solid rgba(201,168,76,.3);
+      color: var(--gold);
+    }
+    .btn-demo:hover { background: rgba(201,168,76,.22); }
 
-  /* PARTICIPANTS TABLE */
-  .participants-panel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;margin-bottom:20px;}
-  .p-table{width:100%;border-collapse:collapse;}
-  .p-table th{background:rgba(255,255,255,0.08);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#8BA8C4;text-transform:uppercase;letter-spacing:.5px;}
-  .p-table td{padding:10px 14px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:#E2E8F0;}
-  .p-table tr:hover td{background:rgba(255,255,255,0.04);}
-  .nivel-pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;}
+    /* ── Ticker ── */
+    .ticker {
+      position: relative; z-index: 10;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: .6rem 2rem;
+      display: flex; align-items: center; gap: 2rem;
+      font-size: .8rem; flex-wrap: wrap;
+    }
+    .ticker-item { display: flex; align-items: center; gap: .5rem; }
+    .ticker-label { color: var(--muted); font-weight: 500; }
+    .ticker-val { font-weight: 700; color: var(--white); font-size: .9rem; }
+    .ticker-val.gold { color: var(--gold); }
+    .ticker-val.teal { color: var(--teal); }
+    .ticker-val.green { color: var(--green); }
 
-  /* TOP BRECHAS */
-  .brecha-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
-  .brecha-row:last-child{border-bottom:none;}
-  .brecha-num{width:24px;height:24px;border-radius:50%;background:rgba(201,168,76,0.2);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;}
-  .brecha-text{font-size:12px;color:#CBD5E1;flex:1;line-height:1.4;}
-  .brecha-score{font-size:13px;font-weight:700;color:var(--gold);}
+    /* ── Main grid ── */
+    .main {
+      position: relative; z-index: 10;
+      max-width: 1400px; margin: 0 auto;
+      padding: 1.5rem 2rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 1.25rem;
+    }
 
-  .empty-state{text-align:center;padding:32px 16px;color:#4A6A8A;}
-  .empty-state .empty-icon{font-size:32px;margin-bottom:8px;}
-  .empty-state p{font-size:13px;}
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .card.gold-line::before { background: linear-gradient(90deg, var(--gold), transparent); }
+    .card.teal-line::before { background: linear-gradient(90deg, var(--teal), transparent); }
+    .card.red-line::before  { background: linear-gradient(90deg, var(--red), transparent); }
+    .card.green-line::before { background: linear-gradient(90deg, var(--green), transparent); }
+    .card.blue-line::before { background: linear-gradient(90deg, var(--blue), transparent); }
 
-  /* CONTROLS */
-  .controls{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
-  .ctrl-badge{background:rgba(201,168,76,0.15);border:1px solid var(--gold);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;color:var(--gold);}
-  .btn{padding:9px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
-  .btn-danger{background:rgba(153,27,27,0.3);color:#FCA5A5;border:1px solid rgba(153,27,27,0.5);}
-  .btn-danger:hover{background:rgba(153,27,27,0.5);}
-  .btn-export{background:rgba(201,168,76,0.2);color:var(--gold);border:1px solid var(--gold);}
-  .btn-export:hover{background:rgba(201,168,76,0.35);}
+    .card.span-2 { grid-column: 1 / -1; }
 
-  .last-updated{font-size:10px;color:#4A6A8A;margin-left:auto;}
-</style>
+    .card-title {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title span { color: var(--gold); font-size: .65rem; }
+
+    /* ── Dimension bars ── */
+    .dim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .dim-block { }
+    .dim-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: .4rem;
+    }
+    .dim-name { font-size: .82rem; font-weight: 600; color: var(--white); }
+    .dim-score {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .dim-bar-bg {
+      background: rgba(255,255,255,.07);
+      border-radius: 20px; height: 8px; overflow: hidden; margin-bottom: .3rem;
+    }
+    .dim-bar-fill {
+      height: 100%; border-radius: 20px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+    .dim-count { font-size: .72rem; color: var(--muted); }
+
+    /* ── Radar chart ── */
+    .radar-wrap {
+      display: flex; align-items: center; justify-content: center;
+      height: 260px;
+    }
+
+    /* ── Distribution heatmap ── */
+    .dist-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .78rem;
+    }
+    .dist-table th {
+      color: var(--muted);
+      font-weight: 600;
+      padding: .4rem .5rem;
+      text-align: center;
+      font-size: .7rem;
+      letter-spacing: .5px;
+    }
+    .dist-table th.dim-th { text-align: left; }
+    .dist-table td {
+      padding: .4rem .5rem;
+      text-align: center;
+      border-radius: 5px;
+      transition: background .5s;
+    }
+    .dist-table td.dim-td {
+      text-align: left;
+      font-weight: 600;
+      font-size: .75rem;
+      color: var(--white);
+      padding-right: 1rem;
+    }
+    .dist-table tr { border-bottom: 1px solid rgba(255,255,255,.04); }
+
+    /* ── Top questions ── */
+    .question-list { display: flex; flex-direction: column; gap: .6rem; }
+    .q-row {
+      display: flex; align-items: center; gap: .85rem;
+      padding: .65rem .85rem;
+      background: rgba(255,255,255,.03);
+      border-radius: 8px;
+      border-left: 3px solid transparent;
+      transition: all .3s;
+    }
+    .q-row.gap  { border-left-color: var(--red); }
+    .q-row.str  { border-left-color: var(--green); }
+    .q-score {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem; min-width: 2.8rem;
+      text-align: center;
+    }
+    .q-text { font-size: .78rem; line-height: 1.45; color: rgba(240,244,255,.8); flex: 1; }
+    .q-dim-tag {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      padding: .2rem .5rem; border-radius: 3px; white-space: nowrap;
+    }
+
+    /* ── Gauge ── */
+    .gauges-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: .5rem;
+    }
+    .gauge-block { text-align: center; }
+    .gauge-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem; line-height: 1;
+      margin-bottom: .2rem;
+    }
+    .gauge-label { font-size: .72rem; color: var(--muted); font-weight: 500; line-height: 1.4; }
+    .gauge-bar-wrap {
+      height: 4px; background: rgba(255,255,255,.08);
+      border-radius: 2px; margin: .5rem 0 .25rem; overflow: hidden;
+    }
+    .gauge-bar { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: .75rem; padding: 2.5rem;
+      color: var(--muted); font-size: .88rem; text-align: center;
+      min-height: 120px;
+    }
+    .empty-icon { font-size: 2rem; opacity: .4; }
+
+    /* ── Footer ── */
+    .footer {
+      position: relative; z-index: 10;
+      text-align: center; padding: 1rem;
+      font-size: .72rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+      .card.span-2 { grid-column: 1; }
+      .gauges-row { grid-template-columns: repeat(2,1fr); }
+      .dim-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <h1>🎓 Panel del Facilitador — Gobierno Corporativo</h1>
-    <p>Asobancaria · Sesión 1 · Universidad EAFIT · Resultados anónimos en tiempo real</p>
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-badge">Asobancaria</div>
+    <div>
+      <div class="header-title">Panel del Facilitador — Gobierno Corporativo</div>
+      <div class="header-sub">Sesión 1 · Universidad EAFIT · Luz María Rivas, Ph.D. &amp; Álvaro Aguirre Henao</div>
+    </div>
   </div>
-  <div class="live-badge">
-    <div class="live-dot"></div>
-    EN VIVO
+  <div class="header-right">
+    <div class="live-badge"><span class="live-dot"></span> En vivo</div>
+    <button class="btn btn-demo" onclick="loadDemo()">⚡ Cargar Demo</button>
+    <button class="btn btn-reset" onclick="resetData()">↺ Reiniciar</button>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-item">
+    <span class="ticker-label">Participantes</span>
+    <span class="ticker-val gold" id="tick-count">0</span>
+  </div>
+  <div class="ticker-item">
+    <span class="ticker-label">Promedio general</span>
+    <span class="ticker-val teal" id="tick-avg">—</span>
+  </div>
+  <div class="ticker-item">
+    <span class="ticker-label">Dimensión más fuerte</span>
+    <span class="ticker-val green" id="tick-strong">—</span>
+  </div>
+  <div class="ticker-item">
+    <span class="ticker-label">Brecha más crítica</span>
+    <span class="ticker-val" style="color:var(--red)" id="tick-gap">—</span>
+  </div>
+  <div class="ticker-item" style="margin-left:auto">
+    <span class="ticker-label">Última actualización</span>
+    <span class="ticker-val" id="tick-time" style="font-size:.78rem;color:var(--muted)">—</span>
   </div>
 </div>
 
-<div class="main">
+<!-- MAIN GRID -->
+<main class="main">
 
-  <div class="controls">
-    <div class="ctrl-badge" id="connStatus">⏳ Conectando a Firebase...</div>
-    <button class="btn btn-export" onclick="exportCSV()">⬇ Exportar CSV</button>
-    <button class="btn btn-danger" onclick="confirmClear()">🗑 Limpiar sesión</button>
-    <span class="last-updated" id="lastUpdated"></span>
-  </div>
-
-  <!-- STAT CARDS -->
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="stat-label">Participantes</div>
-      <div class="stat-val" id="statCount" style="color:var(--gold)">0</div>
-      <div class="stat-sub">han completado el diagnóstico</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Puntaje Promedio</div>
-      <div class="stat-val" id="statAvg" style="color:#34D399">—</div>
-      <div class="stat-sub">sobre 100% posible</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Dimensión más Fuerte</div>
-      <div class="stat-val" id="statStrong" style="color:var(--gold);font-size:18px;margin-top:10px">—</div>
-      <div class="stat-sub" id="statStrongVal"></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Mayor Brecha</div>
-      <div class="stat-val" id="statWeak" style="color:#FCA5A5;font-size:18px;margin-top:10px">—</div>
-      <div class="stat-sub" id="statWeakVal"></div>
-    </div>
-  </div>
-
-  <!-- MAIN DASHBOARD GRID -->
-  <div class="dash-grid">
-
-    <!-- PROMEDIOS POR DIMENSIÓN -->
-    <div class="panel">
-      <div class="panel-header">
-        <h3>📊 Promedios por Dimensión</h3>
-        <span>Escala 1–5</span>
-      </div>
-      <div class="panel-body" id="dimBars">
-        <div class="empty-state"><div class="empty-icon">📊</div><p>Esperando respuestas...</p></div>
+  <!-- Card 1: Promedios por dimensión -->
+  <div class="card gold-line">
+    <div class="card-title">Madurez por Dimensión <span>Escala 1–5</span></div>
+    <div class="dim-grid" id="dim-bars">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">📊</div>
+        <div>Esperando respuestas del grupo…</div>
+        <div style="font-size:.75rem;opacity:.6">Las barras aparecerán cuando los participantes completen el diagnóstico</div>
       </div>
     </div>
+  </div>
 
-    <!-- DISTRIBUCIÓN DE NIVELES -->
-    <div class="panel">
-      <div class="panel-header">
-        <h3>🎯 Distribución de Niveles</h3>
-        <span id="nivelesTotal">0 participantes</span>
+  <!-- Card 2: Radar chart -->
+  <div class="card teal-line">
+    <div class="card-title">Perfil de Madurez GC <span>Radar consolidado</span></div>
+    <div class="radar-wrap">
+      <canvas id="radarChart" width="260" height="260"></canvas>
+    </div>
+  </div>
+
+  <!-- Card 3: Distribución de respuestas (heatmap) -->
+  <div class="card blue-line span-2">
+    <div class="card-title">Distribución de Respuestas <span>% por valor · por dimensión</span></div>
+    <div id="dist-container">
+      <div class="empty-state">
+        <div class="empty-icon">🔥</div>
+        <div>El mapa de calor se generará con las respuestas del grupo</div>
       </div>
-      <div class="panel-body" id="nivelesGrid">
-        <div class="empty-state"><div class="empty-icon">🎯</div><p>Esperando respuestas...</p></div>
+    </div>
+  </div>
+
+  <!-- Card 4: Brechas y fortalezas -->
+  <div class="card red-line">
+    <div class="card-title">⚠️ Brechas Críticas <span>Preguntas con menor puntaje</span></div>
+    <div class="question-list" id="gaps-list">
+      <div class="empty-state"><div class="empty-icon">🔍</div><div>Sin datos aún</div></div>
+    </div>
+  </div>
+
+  <!-- Card 5: Fortalezas -->
+  <div class="card green-line">
+    <div class="card-title">✅ Fortalezas del Grupo <span>Preguntas con mayor puntaje</span></div>
+    <div class="question-list" id="strengths-list">
+      <div class="empty-state"><div class="empty-icon">💪</div><div>Sin datos aún</div></div>
+    </div>
+  </div>
+
+  <!-- Card 6: Indicadores resumen -->
+  <div class="card span-2" style="border-color:var(--border);">
+    <div class="card-title">Indicadores Generales del Grupo</div>
+    <div class="gauges-row" id="gauges-row">
+      <div class="gauge-block">
+        <div class="gauge-num" style="color:var(--gold)" id="g-total">0</div>
+        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-total" style="background:var(--gold);width:0%"></div></div>
+        <div class="gauge-label">Respuestas recibidas</div>
+      </div>
+      <div class="gauge-block">
+        <div class="gauge-num" style="color:var(--teal)" id="g-avg">—</div>
+        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-avg" style="background:var(--teal);width:0%"></div></div>
+        <div class="gauge-label">Promedio general (/ 5)</div>
+      </div>
+      <div class="gauge-block">
+        <div class="gauge-num" style="color:var(--red)" id="g-gap">—</div>
+        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-gap" style="background:var(--red);width:0%"></div></div>
+        <div class="gauge-label">Dimensión con mayor brecha</div>
+      </div>
+      <div class="gauge-block">
+        <div class="gauge-num" style="color:var(--green)" id="g-str">—</div>
+        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-str" style="background:var(--green);width:0%"></div></div>
+        <div class="gauge-label">Dimensión más desarrollada</div>
       </div>
     </div>
-
   </div>
 
-  <!-- TOP BRECHAS (preguntas con menor promedio) -->
-  <div class="panel" style="margin-bottom:20px">
-    <div class="panel-header">
-      <h3>⚠️ Top 5 — Preguntas con Menor Puntaje (Brechas Críticas)</h3>
-      <span>Para guiar la discusión en plenaria</span>
-    </div>
-    <div class="panel-body" id="topBrechas">
-      <div class="empty-state"><div class="empty-icon">⚠️</div><p>Esperando respuestas...</p></div>
-    </div>
-  </div>
+</main>
 
-  <!-- TABLA DE PARTICIPANTES -->
-  <div class="participants-panel">
-    <div class="panel-header" style="background:rgba(255,255,255,0.05)">
-      <h3>👥 Participantes</h3>
-      <span id="tableCount">0 registros</span>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="p-table" id="participantsTable">
-        <thead>
-          <tr>
-            <th>Participante</th>
-            <th>Nivel</th>
-            <th>Total %</th>
-            <th>Junta D.</th>
-            <th>Transparencia</th>
-            <th>Control</th>
-            <th>Sostenibilidad</th>
-            <th>Hora</th>
-          </tr>
-        </thead>
-        <tbody id="participantsBody">
-          <tr><td colspan="8" style="text-align:center;padding:24px;color:#4A6A8A">Esperando participantes...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-</div>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<footer class="footer">
+  Panel del Facilitador · Gobierno Corporativo y Juntas Directivas · Sesión 1 · Asobancaria · Universidad EAFIT
+</footer>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyC9KSd8-eV17_fH5zjD3nR3QpAA0D1QpFU",
-  authDomain: "gc-asobancaria.firebaseapp.com",
-  databaseURL: "https://gc-asobancaria-default-rtdb.firebaseio.com",
-  projectId: "gc-asobancaria",
-  storageBucket: "gc-asobancaria.firebasestorage.app",
-  messagingSenderId: "36253900055",
-  appId: "1:36253900055:web:d0313cf1ef1db5b333eb52"
-};
+// ═══════════════════════════════════════════════════════════════════
+//  DATA MODEL
+// ═══════════════════════════════════════════════════════════════════
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const STORAGE_KEY = 'gc_asobancaria_responses';
 
-// Conectividad
-db.ref('.info/connected').on('value', snap => {
-  const el = document.getElementById('connStatus');
-  if (snap.val()) {
-    el.textContent = '🟢 Conectado a Firebase — actualizando en tiempo real';
-    el.style.borderColor = '#34D399'; el.style.color = '#34D399';
-  } else {
-    el.textContent = '🔴 Sin conexión';
-    el.style.borderColor = '#FCA5A5'; el.style.color = '#FCA5A5';
-  }
-});
-
-const questions = [
-  { d:"JD",    q:"Agenda anual con temas estratégicos (no solo aprobación de informes)" },
-  { d:"JD",    q:"Miembros independientes expresan disidencia registrada en actas" },
-  { d:"JD",    q:"Evaluación formal del desempeño de la Junta al menos una vez al año" },
-  { d:"JD",    q:"Presidente de Junta y CEO son personas distintas con roles diferenciados" },
-  { d:"Trans", q:"Información jerarquizada con 5+ días de anticipación a las reuniones" },
-  { d:"Trans", q:"Informe anual de GC más allá del cumplimiento formal (información material)" },
-  { d:"Trans", q:"Política escrita de manejo de información privilegiada con controles" },
-  { d:"Trans", q:"Conflictos de interés declarados formalmente y registrados en actas" },
-  { d:"Ctrl",  q:"Comité de Auditoría con mayoría independiente, reporta directo a la Junta" },
-  { d:"Ctrl",  q:"Apetito de riesgo definido, supervisado con indicadores en cada sesión" },
-  { d:"Ctrl",  q:"Canal de denuncia activo, confidencial e independiente con evidencia de uso" },
-  { d:"Ctrl",  q:"Plan de sucesión para CEO y VP revisado por la Junta cada 2 años" },
-  { d:"Sost",  q:"Agenda ASG formal en el plan de trabajo anual de la Junta" },
-  { d:"Sost",  q:"Código de Ética revisado periódicamente con mecanismos de aplicación" },
-  { d:"Sost",  q:"Indicadores de diversidad medidos y reportados (Junta y equipo directivo)" },
-  { d:"Sost",  q:"Política de relacionamiento con grupos de interés aprobada por la Junta" },
+const QUESTIONS = [
+  { id:'q1',  dim:'junta',   text:'La Junta Directiva ejerce un rol estratégico claro, diferenciado de la gestión operativa.' },
+  { id:'q2',  dim:'junta',   text:'Existe una evaluación periódica y formal del desempeño de la Junta y sus miembros.' },
+  { id:'q3',  dim:'junta',   text:'Los miembros independientes tienen condiciones reales para actuar con independencia de criterio.' },
+  { id:'q4',  dim:'junta',   text:'Los comités de la Junta (Auditoría, Riesgos, etc.) sesionan con regularidad y cuentan con miembros idóneos.' },
+  { id:'q5',  dim:'trans',   text:'Asobancaria divulga información relevante de manera oportuna, completa y accesible a sus grupos de interés.' },
+  { id:'q6',  dim:'trans',   text:'Existe un Código de Ética con mecanismos efectivos de denuncia y seguimiento.' },
+  { id:'q7',  dim:'trans',   text:'La política de conflictos de interés se aplica de manera rigurosa y transparente.' },
+  { id:'q8',  dim:'trans',   text:'El informe de GC refleja fielmente las prácticas reales de gobierno, no solo el cumplimiento formal.' },
+  { id:'q9',  dim:'control', text:'El sistema de control interno opera con efectividad e independencia frente a la administración.' },
+  { id:'q10', dim:'control', text:'La gestión de riesgos es integral, proactiva y está integrada a la toma de decisiones estratégicas.' },
+  { id:'q11', dim:'control', text:'La auditoría externa (revisoría fiscal) cumple su función con objetividad e independencia real.' },
+  { id:'q12', dim:'control', text:'Las observaciones de control interno y externo se atienden de manera oportuna con planes de mejora.' },
+  { id:'q13', dim:'sost',    text:'Asobancaria incorpora criterios ASG (Ambiental, Social y Gobernanza) en su estrategia institucional.' },
+  { id:'q14', dim:'sost',    text:'Existe una política de inclusión y diversidad efectiva en los órganos de gobierno.' },
+  { id:'q15', dim:'sost',    text:'Los grupos de interés (afiliados, empleados, reguladores) participan activamente en decisiones clave.' },
+  { id:'q16', dim:'sost',    text:'La sostenibilidad es un eje genuino de la estrategia gremial, no solo un requisito de comunicación.' },
 ];
 
-const dimColors  = { JD:"#1E2761", Trans:"#1D4ED8", Ctrl:"#991B1B", Sost:"#065F46" };
-const dimBgColors = { JD:"rgba(30,39,97,0.6)", Trans:"rgba(29,78,216,0.6)", Ctrl:"rgba(153,27,27,0.6)", Sost:"rgba(6,95,70,0.6)" };
-const dimLabels  = { JD:"Junta Directiva", Trans:"Transparencia", Ctrl:"Control y Riesgos", Sost:"Sostenibilidad" };
-const nivelColors = {
-  "Nivel 1 — GC Incipiente":   { bg:"rgba(153,27,27,0.3)",   color:"#FCA5A5",  border:"rgba(153,27,27,0.5)" },
-  "Nivel 2 — GC Estructurado": { bg:"rgba(146,64,14,0.3)",   color:"#FCD34D",  border:"rgba(146,64,14,0.5)" },
-  "Nivel 3 — GC Consolidado":  { bg:"rgba(6,95,70,0.3)",     color:"#6EE7B7",  border:"rgba(6,95,70,0.5)" },
-  "Nivel 4 — GC Avanzado":     { bg:"rgba(29,78,216,0.3)",   color:"#93C5FD",  border:"rgba(29,78,216,0.5)" },
+const DIMS = {
+  junta:   { label: 'Junta Directiva',   color: 'var(--dim1)', hex: '#c9a84c' },
+  trans:   { label: 'Transparencia',     color: 'var(--dim2)', hex: '#2dd4bf' },
+  control: { label: 'Control y Riesgos', color: 'var(--dim3)', hex: '#f87171' },
+  sost:    { label: 'Sostenibilidad',    color: 'var(--dim4)', hex: '#34d399' },
 };
 
-let allData = {};
+const DIM_KEYS = ['junta','trans','control','sost'];
 
-db.ref('diagnosticos').on('value', snap => {
-  allData = snap.val() || {};
-  renderDashboard();
-  document.getElementById('lastUpdated').textContent =
-    'Última actualización: ' + new Date().toLocaleTimeString('es-CO');
-});
+let radarChart = null;
 
-function renderDashboard() {
-  const entries = Object.values(allData);
-  const n = entries.length;
+// ═══════════════════════════════════════════════════════════════════
+//  DATA ACCESS  (localStorage — same origin as taller_participante)
+// ═══════════════════════════════════════════════════════════════════
 
-  // STAT CARDS
-  document.getElementById('statCount').textContent = n;
+function getAllResponses() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch { return []; }
+}
 
-  if (n === 0) {
-    ['statAvg','statStrong','statWeak'].forEach(id => document.getElementById(id).textContent = '—');
-    document.getElementById('statStrongVal').textContent = '';
-    document.getElementById('statWeakVal').textContent = '';
-    document.getElementById('dimBars').innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>Esperando respuestas...</p></div>';
-    document.getElementById('nivelesGrid').innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>Esperando respuestas...</p></div>';
-    document.getElementById('topBrechas').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Esperando respuestas...</p></div>';
-    document.getElementById('participantsBody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#4A6A8A">Esperando participantes...</td></tr>';
-    return;
+function resetData() {
+  if (!confirm('¿Reiniciar todos los datos del diagnóstico? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  render([]);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════════════════════════════════════
+
+function computeStats(responses) {
+  if (!responses.length) return null;
+
+  const n = responses.length;
+
+  // Aggregate all answers per question
+  const qTotals = {};
+  const qCounts = {};
+  QUESTIONS.forEach(q => { qTotals[q.id] = 0; qCounts[q.id] = 0; });
+
+  responses.forEach(resp => {
+    if (!resp.answers) return;
+    Object.entries(resp.answers).forEach(([qid, val]) => {
+      if (qTotals[qid] !== undefined) {
+        qTotals[qid] += val;
+        qCounts[qid]++;
+      }
+    });
+  });
+
+  // Per-question averages
+  const qAvgs = {};
+  QUESTIONS.forEach(q => {
+    qAvgs[q.id] = qCounts[q.id] > 0 ? qTotals[q.id] / qCounts[q.id] : null;
+  });
+
+  // Per-dimension averages
+  const dimAvgs = {};
+  DIM_KEYS.forEach(dim => {
+    const qs = QUESTIONS.filter(q => q.dim === dim);
+    const vals = qs.map(q => qAvgs[q.id]).filter(v => v !== null);
+    dimAvgs[dim] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+
+  // Overall average
+  const allVals = Object.values(dimAvgs).filter(v => v !== null);
+  const overall = allVals.length ? allVals.reduce((a,b)=>a+b,0)/allVals.length : null;
+
+  // Distribution: for each dim, % of responses at each value 1-5
+  const dist = {};
+  DIM_KEYS.forEach(dim => {
+    dist[dim] = [0,0,0,0,0]; // index 0 = value 1
+    const qs = QUESTIONS.filter(q => q.dim === dim);
+    let total = 0;
+    responses.forEach(resp => {
+      if (!resp.answers) return;
+      qs.forEach(q => {
+        if (resp.answers[q.id]) {
+          dist[dim][resp.answers[q.id]-1]++;
+          total++;
+        }
+      });
+    });
+    if (total > 0) dist[dim] = dist[dim].map(v => Math.round(v/total*100));
+  });
+
+  // Sorted questions for gaps & strengths
+  const sortedQ = QUESTIONS
+    .map(q => ({ ...q, avg: qAvgs[q.id] }))
+    .filter(q => q.avg !== null)
+    .sort((a,b) => a.avg - b.avg);
+
+  const gaps = sortedQ.slice(0, 4);
+  const strengths = sortedQ.slice(-4).reverse();
+
+  // Best and worst dim
+  const dimSorted = DIM_KEYS
+    .filter(d => dimAvgs[d] !== null)
+    .sort((a,b) => dimAvgs[a] - dimAvgs[b]);
+  const worstDim  = dimSorted[0] || null;
+  const bestDim   = dimSorted[dimSorted.length-1] || null;
+
+  return { n, overall, dimAvgs, qAvgs, dist, gaps, strengths, worstDim, bestDim };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════════
+
+function fmt(v) { return v !== null ? v.toFixed(2) : '—'; }
+function pct(v) { return v !== null ? ((v-1)/4*100).toFixed(0) + '%' : '0%'; }
+
+function scoreColor(v) {
+  if (v === null) return 'var(--muted)';
+  if (v >= 4) return 'var(--green)';
+  if (v >= 3) return 'var(--gold)';
+  if (v >= 2) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function render(responses) {
+  const stats = computeStats(responses);
+
+  // ── Ticker ──
+  document.getElementById('tick-count').textContent = stats ? stats.n : 0;
+  document.getElementById('tick-avg').textContent = stats ? fmt(stats.overall) + '/5' : '—';
+  document.getElementById('tick-strong').textContent = stats && stats.bestDim
+    ? DIMS[stats.bestDim].label + ' · ' + fmt(stats.dimAvgs[stats.bestDim]) : '—';
+  document.getElementById('tick-gap').textContent = stats && stats.worstDim
+    ? DIMS[stats.worstDim].label + ' · ' + fmt(stats.dimAvgs[stats.worstDim]) : '—';
+  document.getElementById('tick-time').textContent = new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+  // ── Dimension bars ──
+  const dimContainer = document.getElementById('dim-bars');
+  if (!stats) {
+    dimContainer.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📊</div><div>Esperando respuestas del grupo…</div><div style="font-size:.75rem;opacity:.6">Las barras aparecerán cuando los participantes completen el diagnóstico</div></div>`;
+  } else {
+    dimContainer.innerHTML = DIM_KEYS.map(dim => {
+      const v = stats.dimAvgs[dim];
+      const pctVal = v !== null ? ((v-1)/4*100) : 0;
+      return `
+        <div class="dim-block">
+          <div class="dim-header">
+            <div class="dim-name">${DIMS[dim].label}</div>
+            <div class="dim-score" style="color:${DIMS[dim].color}">${fmt(v)}</div>
+          </div>
+          <div class="dim-bar-bg">
+            <div class="dim-bar-fill" style="width:${pctVal}%;background:${DIMS[dim].color}"></div>
+          </div>
+          <div class="dim-count">${stats.n} participante${stats.n!==1?'s':''} · ${QUESTIONS.filter(q=>q.dim===dim).length} preguntas</div>
+        </div>`;
+    }).join('');
   }
 
-  // Promedios totales
-  const avgTotal = Math.round(entries.reduce((s, e) => s + e.pct_total, 0) / n);
-  document.getElementById('statAvg').textContent = avgTotal + '%';
+  // ── Radar chart ──
+  const radarData = DIM_KEYS.map(dim => stats ? (stats.dimAvgs[dim] || 0) : 0);
+  const radarCtx = document.getElementById('radarChart').getContext('2d');
 
-  // Promedios por dimensión
-  const dimAvgs = { JD:0, Trans:0, Ctrl:0, Sost:0 };
-  entries.forEach(e => {
-    dimAvgs.JD    += e.dim_JD;
-    dimAvgs.Trans += e.dim_Trans;
-    dimAvgs.Ctrl  += e.dim_Ctrl;
-    dimAvgs.Sost  += e.dim_Sost;
-  });
-  Object.keys(dimAvgs).forEach(d => dimAvgs[d] = dimAvgs[d] / n);
+  if (radarChart) {
+    radarChart.data.datasets[0].data = radarData;
+    radarChart.update('active');
+  } else {
+    radarChart = new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: DIM_KEYS.map(d => DIMS[d].label),
+        datasets: [{
+          label: 'Madurez GC',
+          data: radarData,
+          backgroundColor: 'rgba(201,168,76,.15)',
+          borderColor: '#c9a84c',
+          borderWidth: 2.5,
+          pointBackgroundColor: DIM_KEYS.map(d => DIMS[d].hex),
+          pointBorderColor: '#0b0f1a',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0, max: 5,
+            ticks: {
+              stepSize: 1,
+              color: 'rgba(107,127,163,.7)',
+              font: { size: 9, family: 'DM Sans' },
+              backdropColor: 'transparent',
+            },
+            grid: { color: 'rgba(255,255,255,.07)' },
+            angleLines: { color: 'rgba(255,255,255,.07)' },
+            pointLabels: {
+              color: 'rgba(240,244,255,.8)',
+              font: { size: 11, weight: '600', family: 'DM Sans' },
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a2235',
+            borderColor: '#243050',
+            borderWidth: 1,
+            titleColor: '#c9a84c',
+            bodyColor: '#f0f4ff',
+            callbacks: {
+              label: ctx => ` ${ctx.formattedValue} / 5`
+            }
+          }
+        },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+      }
+    });
+  }
 
-  // Fuerte / Débil
-  const sorted = Object.entries(dimAvgs).sort((a,b) => b[1]-a[1]);
-  document.getElementById('statStrong').textContent = dimLabels[sorted[0][0]];
-  document.getElementById('statStrongVal').textContent = sorted[0][1].toFixed(1) + ' / 5.0';
-  document.getElementById('statWeak').textContent = dimLabels[sorted[sorted.length-1][0]];
-  document.getElementById('statWeakVal').textContent = sorted[sorted.length-1][1].toFixed(1) + ' / 5.0';
+  // ── Distribution heatmap ──
+  const distContainer = document.getElementById('dist-container');
+  if (!stats) {
+    distContainer.innerHTML = `<div class="empty-state"><div class="empty-icon">🔥</div><div>El mapa de calor se generará con las respuestas del grupo</div></div>`;
+  } else {
+    const heatColor = (pct) => {
+      if (pct === 0) return 'transparent';
+      const alpha = Math.min(pct / 60, 1);
+      if (pct >= 40) return `rgba(201,168,76,${alpha})`;
+      if (pct >= 20) return `rgba(45,212,191,${alpha * .8})`;
+      return `rgba(107,127,163,${alpha * .6})`;
+    };
+    distContainer.innerHTML = `
+      <table class="dist-table">
+        <thead>
+          <tr>
+            <th class="dim-th">Dimensión</th>
+            <th>1 — No existe</th>
+            <th>2</th>
+            <th>3 — Con brechas</th>
+            <th>4</th>
+            <th>5 — Efectivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${DIM_KEYS.map(dim => `
+            <tr>
+              <td class="dim-td" style="color:${DIMS[dim].hex}">${DIMS[dim].label}</td>
+              ${stats.dist[dim].map(p => `<td style="background:${heatColor(p)};color:${p>25?'#0b0f1a':'rgba(240,244,255,.7)'};font-weight:${p>25?700:400}">${p > 0 ? p+'%' : '·'}</td>`).join('')}
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
 
-  // DIM BARS
-  document.getElementById('dimBars').innerHTML = Object.entries(dimAvgs).map(([d, avg]) => {
-    const pct = Math.round(avg / 5 * 100);
-    return `<div class="dim-row">
-      <div class="dim-label">${dimLabels[d]}</div>
-      <div class="dim-bar-bg">
-        <div class="dim-bar-fill" style="width:${pct}%;background:${dimBgColors[d]};border:1px solid ${dimColors[d]}60">
-          <span>${avg.toFixed(1)}</span>
-        </div>
-      </div>
-      <div class="dim-val" style="color:${pct>=60?'#34D399':pct>=40?'#FCD34D':'#FCA5A5'}">${pct}%</div>
-    </div>`;
-  }).join('');
-
-  // NIVELES
-  const nivelCount = {};
-  entries.forEach(e => { nivelCount[e.nivel] = (nivelCount[e.nivel]||0) + 1; });
-  document.getElementById('nivelesTotal').textContent = n + ' participante' + (n!==1?'s':'');
-  const nivelOrder = ["Nivel 1 — GC Incipiente","Nivel 2 — GC Estructurado","Nivel 3 — GC Consolidado","Nivel 4 — GC Avanzado"];
-  document.getElementById('nivelesGrid').innerHTML = `<div class="nivel-grid">` +
-    nivelOrder.map(nv => {
-      const cnt  = nivelCount[nv] || 0;
-      const pct  = n > 0 ? Math.round(cnt/n*100) : 0;
-      const cols = nivelColors[nv];
-      const shortLabel = nv.replace("Nivel 1 — ","").replace("Nivel 2 — ","").replace("Nivel 3 — ","").replace("Nivel 4 — ","");
-      return `<div class="nivel-card" style="background:${cols.bg};border:1px solid ${cols.border}">
-        <div class="n-count" style="color:${cols.color}">${cnt}</div>
-        <div class="n-label" style="color:${cols.color}">${shortLabel}</div>
-        <div class="n-pct" style="color:${cols.color}">${pct}%</div>
-      </div>`;
-    }).join('') + `</div>`;
-
-  // TOP BRECHAS — promedio por pregunta
-  const qAvgs = questions.map((q, i) => {
-    const vals = entries.map(e => (e.respuestas && e.respuestas[`q${i}`]) || 0).filter(v=>v>0);
-    const avg  = vals.length > 0 ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
-    return { idx:i, q:q.q, d:q.d, avg };
-  }).filter(q => q.avg > 0).sort((a,b)=>a.avg-b.avg).slice(0,5);
-
-  document.getElementById('topBrechas').innerHTML = qAvgs.length === 0
-    ? '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Calculando...</p></div>'
-    : qAvgs.map((q, i) => `
-      <div class="brecha-row">
-        <div class="brecha-num">${i+1}</div>
-        <div>
-          <div style="font-size:9px;font-weight:700;color:${dimColors[q.d]||'#8BA8C4'};text-transform:uppercase;margin-bottom:2px">${dimLabels[q.d]}</div>
-          <div class="brecha-text">${q.q}</div>
-        </div>
-        <div class="brecha-score">${q.avg.toFixed(1)}</div>
+  // ── Gaps ──
+  const gapsList = document.getElementById('gaps-list');
+  if (!stats || !stats.gaps.length) {
+    gapsList.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div>Sin datos aún</div></div>`;
+  } else {
+    gapsList.innerHTML = stats.gaps.map(q => `
+      <div class="q-row gap">
+        <div class="q-score" style="color:${scoreColor(q.avg)}">${fmt(q.avg)}</div>
+        <div class="q-text">${q.text}</div>
+        <div class="q-dim-tag" style="background:${DIMS[q.dim].hex}22;color:${DIMS[q.dim].hex}">${DIMS[q.dim].label.split(' ')[0]}</div>
       </div>`).join('');
+  }
 
-  // TABLA
-  document.getElementById('tableCount').textContent = n + ' registro' + (n!==1?'s':'');
-  const sortedEntries = entries.sort((a,b) => b.timestamp - a.timestamp);
-  const nivelesShort = {
-    "Nivel 1 — GC Incipiente":   { label:"Nivel 1", bg:"rgba(153,27,27,0.4)", color:"#FCA5A5" },
-    "Nivel 2 — GC Estructurado": { label:"Nivel 2", bg:"rgba(146,64,14,0.4)", color:"#FCD34D" },
-    "Nivel 3 — GC Consolidado":  { label:"Nivel 3", bg:"rgba(6,95,70,0.4)",   color:"#6EE7B7" },
-    "Nivel 4 — GC Avanzado":     { label:"Nivel 4", bg:"rgba(29,78,216,0.4)", color:"#93C5FD" },
-  };
-  document.getElementById('participantsBody').innerHTML = sortedEntries.map((e, idx) => {
-    const nc   = nivelesShort[e.nivel] || { label:e.nivel, bg:"rgba(100,116,139,0.3)", color:"#CBD5E1" };
-    const hora = e.timestamp ? new Date(e.timestamp).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) : '—';
-    const pctColor = e.pct_total>=75?'#6EE7B7':e.pct_total>=55?'#34D399':e.pct_total>=35?'#FCD34D':'#FCA5A5';
-    return `<tr>
-      <td style="font-weight:600">Participante ${idx + 1}</td>
-      <td><span class="nivel-pill" style="background:${nc.bg};color:${nc.color}">${nc.label}</span></td>
-      <td style="font-weight:700;color:${pctColor}">${e.pct_total}%</td>
-      <td>${(e.dim_JD||0).toFixed(1)}</td>
-      <td>${(e.dim_Trans||0).toFixed(1)}</td>
-      <td>${(e.dim_Ctrl||0).toFixed(1)}</td>
-      <td>${(e.dim_Sost||0).toFixed(1)}</td>
-      <td style="color:#8BA8C4">${hora}</td>
-    </tr>`;
-  }).join('');
-}
+  // ── Strengths ──
+  const strList = document.getElementById('strengths-list');
+  if (!stats || !stats.strengths.length) {
+    strList.innerHTML = `<div class="empty-state"><div class="empty-icon">💪</div><div>Sin datos aún</div></div>`;
+  } else {
+    strList.innerHTML = stats.strengths.map(q => `
+      <div class="q-row str">
+        <div class="q-score" style="color:${scoreColor(q.avg)}">${fmt(q.avg)}</div>
+        <div class="q-text">${q.text}</div>
+        <div class="q-dim-tag" style="background:${DIMS[q.dim].hex}22;color:${DIMS[q.dim].hex}">${DIMS[q.dim].label.split(' ')[0]}</div>
+      </div>`).join('');
+  }
 
-function exportCSV() {
-  const entries = Object.values(allData);
-  if (entries.length === 0) { alert('No hay datos para exportar.'); return; }
-  const rows = [['Nombre','Nivel','Total %','Junta D.','Transparencia','Control','Sostenibilidad','Hora']];
-  entries.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach((e, idx) => {
-    rows.push([
-      `Participante ${idx+1}`, e.nivel, e.pct_total,
-      (e.dim_JD||0).toFixed(1), (e.dim_Trans||0).toFixed(1),
-      (e.dim_Ctrl||0).toFixed(1), (e.dim_Sost||0).toFixed(1),
-      e.timestamp ? new Date(e.timestamp).toLocaleString('es-CO') : '—'
-    ]);
-  });
-  const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `GC_Asobancaria_Resultados_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-}
+  // ── Gauges ──
+  document.getElementById('g-total').textContent = stats ? stats.n : 0;
+  document.getElementById('gb-total').style.width = stats ? Math.min(stats.n/30*100,100)+'%' : '0%';
 
-function confirmClear() {
-  if (confirm('¿Está seguro de que desea borrar TODOS los diagnósticos de esta sesión? Esta acción no se puede deshacer.')) {
-    db.ref('diagnosticos').remove().then(() => alert('Datos eliminados.'));
+  document.getElementById('g-avg').textContent = stats ? fmt(stats.overall) : '—';
+  document.getElementById('gb-avg').style.width = stats && stats.overall ? ((stats.overall-1)/4*100)+'%' : '0%';
+
+  if (stats && stats.worstDim) {
+    const wv = stats.dimAvgs[stats.worstDim];
+    document.getElementById('g-gap').textContent = DIMS[stats.worstDim].label.split(' ')[0];
+    document.getElementById('gb-gap').style.width = wv ? ((wv-1)/4*100)+'%' : '0%';
+  } else {
+    document.getElementById('g-gap').textContent = '—';
+  }
+
+  if (stats && stats.bestDim) {
+    const bv = stats.dimAvgs[stats.bestDim];
+    document.getElementById('g-str').textContent = DIMS[stats.bestDim].label.split(' ')[0];
+    document.getElementById('gb-str').style.width = bv ? ((bv-1)/4*100)+'%' : '0%';
+  } else {
+    document.getElementById('g-str').textContent = '—';
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  DEMO DATA
+// ═══════════════════════════════════════════════════════════════════
+
+function loadDemo() {
+  const demoResponses = [];
+  const scenarios = [
+    // Balanced moderate
+    { junta:[3,2,3,2], trans:[4,3,3,2], control:[3,2,3,3], sost:[2,2,3,2] },
+    { junta:[4,3,4,3], trans:[4,4,3,3], control:[4,3,3,4], sost:[3,3,4,3] },
+    { junta:[2,1,2,2], trans:[3,2,2,1], control:[2,2,2,2], sost:[1,1,2,2] },
+    { junta:[5,4,4,4], trans:[4,4,5,4], control:[4,4,4,5], sost:[4,4,4,4] },
+    { junta:[3,3,3,3], trans:[3,3,4,3], control:[3,3,3,3], sost:[3,3,3,3] },
+    { junta:[4,3,3,3], trans:[5,4,4,3], control:[4,3,4,3], sost:[3,2,3,3] },
+    { junta:[2,2,2,1], trans:[3,2,2,2], control:[2,1,2,2], sost:[2,2,1,2] },
+    { junta:[4,4,5,4], trans:[4,3,4,4], control:[5,4,4,4], sost:[4,3,4,4] },
+  ];
+  scenarios.forEach((sc, i) => {
+    const answers = {};
+    ['junta','trans','control','sost'].forEach((dim, di) => {
+      QUESTIONS.filter(q=>q.dim===dim).forEach((q, qi) => {
+        answers[q.id] = sc[dim][qi] || 3;
+      });
+    });
+    demoResponses.push({ id: 'demo_' + i, ts: Date.now() - i*30000, answers });
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(demoResponses));
+  render(demoResponses);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LIVE POLLING  (same-origin localStorage + BroadcastChannel)
+// ═══════════════════════════════════════════════════════════════════
+
+// BroadcastChannel: instant update when taller_participante writes
+if (typeof BroadcastChannel !== 'undefined') {
+  const bc = new BroadcastChannel('gc_asobancaria');
+  bc.onmessage = () => render(getAllResponses());
+}
+
+// Fallback polling every 4 seconds
+setInterval(() => render(getAllResponses()), 4000);
+
+// Initial render
+render(getAllResponses());
 </script>
 </body>
 </html>
