@@ -130,6 +130,10 @@
       </div>
       <div id="questions-container"></div>
       <div class="sent-banner" id="sentBanner">✅ Sus resultados fueron enviados al panel del facilitador de forma anónima</div>
+      <div id="downloadBanner" style="display:none;margin-top:.75rem;padding:.85rem 1.1rem;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+        <span style="font-size:.88rem;color:#166534;font-weight:600">✅ Respuestas enviadas — descargue su resultado individual</span>
+        <button class="btn btn-gold btn-sm" onclick="downloadMiResultado()">📥 Descargar mi Resultado</button>
+      </div>
       <div class="btn-group">
         <button class="btn btn-gold" onclick="submitDiagnostic()">📊 Ver mi Diagnóstico y Enviar</button>
         <button class="btn btn-outline btn-sm" onclick="showTab('plan')">Continuar a Plan →</button>
@@ -242,6 +246,9 @@
 </main>
 <footer class="site-footer">Diagnóstico de Gobierno Corporativo · Asobancaria · Sesión 1 · Universidad EAFIT</footer>
 
+<!-- SheetJS para Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -337,7 +344,64 @@ async function submitDiagnostic() {
   } catch(e) { console.warn('Firebase:', e); }
 
   document.getElementById('sentBanner').classList.add('visible');
+  document.getElementById('downloadBanner').style.display = 'flex';
   updateScores();
+}
+
+function downloadMiResultado() {
+  const DIM_LABELS_ES = {junta:'Junta Directiva',trans:'Transparencia',control:'Control y Riesgos',sost:'Sostenibilidad'};
+  const DIM_KEYS = ['junta','trans','control','sost'];
+  const fecha = new Date().toLocaleDateString('es-CO');
+  const wb = XLSX.utils.book_new();
+
+  // ── Hoja 1: Mi Diagnóstico ─────────────────────────────────────
+  const dimAvgs = {};
+  DIM_KEYS.forEach(dim => {
+    const qs = QUESTIONS.filter(q=>q.dim===dim);
+    const vals = qs.map(q=>responses[q.id]).filter(Boolean);
+    dimAvgs[dim] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  const allVals = Object.values(responses);
+  const overall = allVals.length ? allVals.reduce((a,b)=>a+b,0)/allVals.length : null;
+
+  const nivelLabel = v => !v?'Sin responder':v>=4?'Alto':v>=3?'Medio':v>=2?'Bajo':'Crítico';
+  const nivelInterp = v => !v?'':v>=4?'Fortaleza — mantener y profundizar':v>=3?'En desarrollo — brechas identificables':v>=2?'Débil — requiere atención prioritaria':'Crítico — intervención urgente';
+
+  const hoja1 = [
+    ['MI DIAGNÓSTICO DE GOBIERNO CORPORATIVO — ASOBANCARIA'],
+    ['Sesión 1 · Universidad EAFIT · Luz María Rivas, Ph.D. & Álvaro Aguirre Henao'],
+    ['Fecha:', fecha],
+    [],
+    ['MIS RESULTADOS POR DIMENSIÓN'],
+    ['Dimensión', 'Mi Puntaje', 'Nivel', 'Interpretación'],
+  ];
+  DIM_KEYS.forEach(dim => {
+    const v = dimAvgs[dim];
+    hoja1.push([DIM_LABELS_ES[dim], v?+v.toFixed(2):'-', nivelLabel(v), nivelInterp(v)]);
+  });
+  hoja1.push([]);
+  hoja1.push(['Mi Promedio General', overall?+overall.toFixed(2):'-', nivelLabel(overall), nivelInterp(overall)]);
+  hoja1.push([]);
+  hoja1.push(['ESCALA: 1 = No existe  |  2 = Incipiente  |  3 = Existe con brechas  |  4 = Desarrollado  |  5 = Completamente efectivo']);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(hoja1);
+  ws1['!cols'] = [{wch:22},{wch:12},{wch:12},{wch:50}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Mi Diagnóstico');
+
+  // ── Hoja 2: Mis respuestas por pregunta ────────────────────────
+  const hoja2 = [
+    ['MIS RESPUESTAS POR PREGUNTA'],
+    ['#', 'Dimensión', 'Pregunta', 'Mi Respuesta', 'Nivel'],
+  ];
+  QUESTIONS.forEach((q,i) => {
+    const v = responses[q.id];
+    hoja2.push([i+1, DIM_LABELS_ES[q.dim], q.text, v||'Sin responder', nivelLabel(v)]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(hoja2);
+  ws2['!cols'] = [{wch:5},{wch:20},{wch:65},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Respuestas por Pregunta');
+
+  XLSX.writeFile(wb, `GC_Asobancaria_MiDiagnostico_${fecha.replace(/\//g,'-')}.xlsx`);
 }
 
 function showTab(id) {

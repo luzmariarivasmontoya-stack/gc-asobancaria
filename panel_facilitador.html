@@ -31,6 +31,8 @@
     .btn-reset:hover{background:rgba(248,113,113,.22)}
     .btn-demo{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);color:var(--gold)}
     .btn-demo:hover{background:rgba(201,168,76,.22)}
+    .btn-excel{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:var(--green)}
+    .btn-excel:hover{background:rgba(52,211,153,.22)}
     .ticker{position:relative;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);
       padding:.6rem 2rem;display:flex;align-items:center;gap:2rem;font-size:.8rem;flex-wrap:wrap}
     .ticker-item{display:flex;align-items:center;gap:.5rem}
@@ -93,6 +95,7 @@
   </div>
   <div class="header-right">
     <div class="live-badge"><span class="live-dot"></span> En vivo</div>
+    <button class="btn btn-excel" onclick="downloadExcel()">📥 Descargar Excel</button>
     <button class="btn btn-demo" onclick="loadDemo()">⚡ Cargar Demo</button>
     <button class="btn btn-reset" onclick="resetData()">↺ Reiniciar</button>
   </div>
@@ -146,6 +149,9 @@
 </main>
 
 <footer class="footer">Panel del Facilitador · Gobierno Corporativo y Juntas Directivas · Sesión 1 · Asobancaria · Universidad EAFIT</footer>
+
+<!-- SheetJS para Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <!-- Firebase SDK -->
 <script type="module">
@@ -322,6 +328,104 @@ window._render = function(responses) {
   if(stats&&stats.bestDim){document.getElementById('g-str').textContent=DIMS[stats.bestDim].label.split(' ')[0];document.getElementById('gb-str').style.width=(((stats.dimAvgs[stats.bestDim]-1)/4)*100)+'%';}
   else document.getElementById('g-str').textContent='—';
 };
+
+// ── Guardar últimas respuestas para el Excel ──────────────────────
+let _lastResponses = [];
+const _origRender = window._render;
+window._render = function(responses) {
+  _lastResponses = responses;
+  _origRender(responses);
+};
+
+// ── Descargar Excel consolidado ───────────────────────────────────
+function downloadExcel() {
+  const responses = _lastResponses;
+  if (!responses.length) { alert('No hay datos para descargar aún.'); return; }
+  const stats = computeStats(responses);
+  if (!stats) { alert('No hay datos suficientes.'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const fecha = new Date().toLocaleDateString('es-CO');
+
+  // ── Hoja 1: Resumen Ejecutivo ──────────────────────────────────
+  const resumen = [
+    ['DIAGNÓSTICO DE GOBIERNO CORPORATIVO — ASOBANCARIA'],
+    ['Sesión 1 · Universidad EAFIT · Luz María Rivas, Ph.D. & Álvaro Aguirre Henao'],
+    ['Fecha:', fecha, '', 'Participantes:', stats.n],
+    [],
+    ['RESUMEN POR DIMENSIÓN'],
+    ['Dimensión', 'Promedio', 'Nivel', 'Interpretación'],
+  ];
+  const nivelLabel = v => v>=4?'Alto':v>=3?'Medio':v>=2?'Bajo':'Crítico';
+  const nivelInterp = v => v>=4?'Fortaleza — mantener y profundizar':v>=3?'En desarrollo — brechas identificables':v>=2?'Débil — requiere atención prioritaria':'Crítico — intervención urgente';
+  DIM_KEYS.forEach(dim => {
+    const v = stats.dimAvgs[dim];
+    resumen.push([DIMS[dim].label, v?+v.toFixed(2):0, nivelLabel(v), nivelInterp(v)]);
+  });
+  resumen.push([]);
+  resumen.push(['Promedio General', +stats.overall.toFixed(2), nivelLabel(stats.overall), nivelInterp(stats.overall)]);
+  resumen.push([]);
+  resumen.push(['BRECHAS CRÍTICAS (preguntas con menor puntaje)']);
+  resumen.push(['#', 'Dimensión', 'Pregunta', 'Promedio']);
+  stats.gaps.forEach((q,i) => resumen.push([i+1, DIMS[q.dim].label, q.text, +q.avg.toFixed(2)]));
+  resumen.push([]);
+  resumen.push(['FORTALEZAS DEL GRUPO (preguntas con mayor puntaje)']);
+  resumen.push(['#', 'Dimensión', 'Pregunta', 'Promedio']);
+  stats.strengths.forEach((q,i) => resumen.push([i+1, DIMS[q.dim].label, q.text, +q.avg.toFixed(2)]));
+
+  const ws1 = XLSX.utils.aoa_to_sheet(resumen);
+  ws1['!cols'] = [{wch:20},{wch:10},{wch:12},{wch:55}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Resumen Ejecutivo');
+
+  // ── Hoja 2: Detalle por pregunta ───────────────────────────────
+  const detalle = [
+    ['DETALLE POR PREGUNTA'],
+    ['#', 'Dimensión', 'Pregunta', 'Promedio Grupo', 'Respuestas (n)', 'Nivel'],
+  ];
+  QUESTIONS.forEach((q,i) => {
+    const avg = stats.qAvgs[q.id];
+    detalle.push([i+1, DIMS[q.dim].label, q.text, avg?+avg.toFixed(2):'-', stats.n, avg?nivelLabel(avg):'-']);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(detalle);
+  ws2['!cols'] = [{wch:5},{wch:20},{wch:65},{wch:15},{wch:15},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Detalle por Pregunta');
+
+  // ── Hoja 3: Distribución de respuestas ────────────────────────
+  const distData = [
+    ['DISTRIBUCIÓN DE RESPUESTAS POR DIMENSIÓN (% de participantes)'],
+    ['Dimensión', '1 — No existe', '2', '3 — Con brechas', '4', '5 — Completamente efectivo'],
+  ];
+  DIM_KEYS.forEach(dim => {
+    distData.push([DIMS[dim].label, ...stats.dist[dim].map(v=>v+'%')]);
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet(distData);
+  ws3['!cols'] = [{wch:22},{wch:16},{wch:8},{wch:18},{wch:8},{wch:24}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Distribución');
+
+  // ── Hoja 4: Datos individuales anónimos ───────────────────────
+  const indivHeader = ['Participante', ...QUESTIONS.map((q,i)=>`P${i+1}`),'Junta Dir.','Transparencia','Control/Riesgos','Sostenibilidad','Promedio'];
+  const indivData = [indivHeader];
+  responses.forEach((r,i) => {
+    if (!r.answers) return;
+    const row = [`Participante ${i+1}`];
+    QUESTIONS.forEach(q => row.push(r.answers[q.id]||''));
+    DIM_KEYS.forEach(dim => {
+      const qs = QUESTIONS.filter(q=>q.dim===dim);
+      const vals = qs.map(q=>r.answers[q.id]).filter(Boolean);
+      row.push(vals.length?+(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'');
+    });
+    const allVals = QUESTIONS.map(q=>r.answers[q.id]).filter(Boolean);
+    row.push(allVals.length?+(allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(2):'');
+    indivData.push(row);
+  });
+  const ws4 = XLSX.utils.aoa_to_sheet(indivData);
+  ws4['!cols'] = [{wch:16},...QUESTIONS.map(()=>({wch:5})),{wch:12},{wch:14},{wch:16},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws4, 'Datos Individuales');
+
+  // ── Descargar ──────────────────────────────────────────────────
+  const nombreArchivo = `GC_Asobancaria_Diagnostico_${fecha.replace(/\//g,'-')}.xlsx`;
+  XLSX.writeFile(wb, nombreArchivo);
+}
 
 async function resetData() {
   if (!confirm('¿Reiniciar todos los datos? Esta acción no se puede deshacer.')) return;
